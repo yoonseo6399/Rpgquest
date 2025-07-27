@@ -1,12 +1,13 @@
 package io.github.yoonseo6399.rpgquest.quest
 
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.serialization.Serializable
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents
 import net.minecraft.entity.player.PlayerEntity
 import java.io.Closeable
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.resume
-
+@Serializable
 sealed class QuestCondition(
     val quest: Quest,
     val autoTerminate: Boolean = true
