@@ -2,80 +2,109 @@ package io.github.yoonseo6399.rpgquest.quest
 
 import io.github.yoonseo6399.rpgquest.RpgCoroutineScope
 import io.github.yoonseo6399.rpgquest.Rpgquest
+import io.github.yoonseo6399.rpgquest.quest.npc.Npc
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import net.minecraft.entity.Entity
 import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.item.ItemConvertible
+import net.minecraft.item.ItemStack
+import net.minecraft.item.Items
+import net.minecraft.registry.Registry
+import net.minecraft.registry.RegistryKeys
+import net.minecraft.text.Text
 import net.minecraft.util.Identifier
+import net.minecraft.util.math.Vec3d
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
-@Serializable
-open class Quest(val id : String,val startCondition: QuestCondition?,val subQuest: Quest?,val dialogue: Dialogue,val settings: Settings){
+val testBehaviors = QuestBehaviors().apply {
+    lines.addAll(listOf(
+        Behavior.Npc(Npc("a"), Text.literal("my first Dialogue")),
+        Behavior.Delay(1 .seconds),
+        Behavior.Npc(Npc("a"), Text.literal("my second Dialogue")),
+        Behavior.GiveItem(ItemStack(Items.DIAMOND,64)),
+        Behavior.Npc(Npc("a"), Text.literal("I'll give you some DIAMOND!!!!!!!!"))
+    ))
+}
+val testQuest = Quest("okay..? this is Quest Title?","firstQuest", QuestCondition.Arrive(Vec3d(71.0, 68.0, -795.0),5.0),null,testBehaviors,
+    Quest.Settings.Default.apply { notifyActivation = Text.literal("a Quest Notification") })
+// 아이템 얻기, 선행 퀘스트 달성, 특정 장소 도달, npc 상호작용
+open class Quest(val title : String, val id : String, val startCondition: QuestCondition?, val subQuest: Quest?, val behavior: QuestBehaviors, val settings: Settings){
     val identifier
         get() = Identifier.of(Rpgquest.MOD_ID, "quest.$id")
+    val LINER get() = Text.literal("-------------------------------------------------------------")
 
-    @Serializable
-    data class Settings(var notifyActivation : Boolean){
+    open fun notify(player: PlayerEntity) {
+        player.sendMessage(LINER,false)
+        player.sendMessage(settings.notifyActivation,false)
+        player.sendMessage(LINER,false)
+    }
+
+    data class Settings(var notifyActivation : Text?){
         companion object {
-            val Default get() = Settings(false)
+            val Default get() = Settings(null)
         }
     }
 }
 open class ActiveQuest(
+    title: String,
     id: String,
     startCondition: QuestCondition?,
     subQuest: Quest?,
-    dialogue: Dialogue,
+    behavior: QuestBehaviors,
     settings: Settings,
     val player: PlayerEntity
-) : Quest(id, startCondition, subQuest, dialogue, settings) {
-    constructor(quest: Quest,player: PlayerEntity) : this(quest.id,quest.startCondition,quest.subQuest,quest.dialogue,quest.settings,player)
+) : Quest(title, id, startCondition, subQuest, behavior, settings) {
+    constructor(quest: Quest,player: PlayerEntity) : this(quest.title,quest.id,quest.startCondition,quest.subQuest,quest.behavior,quest.settings,player)
     init {
         RpgCoroutineScope.launch {
-            startCondition?.await()
+            if(settings.notifyActivation != null) notify(player)
+            startCondition?.await(this@ActiveQuest)
             //TODO notify
-            dialogue.show(player)
+            behavior.show(player)
             QuestManager.completion(player,this@ActiveQuest)
+            subQuest?.let { QuestManager.assign(player,it) }
         }
     }
 }
 object QuestManager {
     val activeQuest = mutableListOf<ActiveQuest>()
     fun completion(player: PlayerEntity,quest: Quest) {
-
+        player.sendMessage(Text.literal("퀘스트를 끝마쳤습니다"),false)
     }
     fun assign(player: PlayerEntity,quest: Quest) : ActiveQuest{
         return ActiveQuest(quest,player).also { activeQuest += it }
     }
 }
 
-enum class ConditionType {
-    REPEAT, EVENT
-}
-enum class QuestBranch {
-
-}
-@Serializable
-class Dialogue() {
-    val lines = mutableListOf<DialogueLine>()
-    fun show(player: PlayerEntity) {
-        RpgCoroutineScope.launch {
-            for (line in lines) {
-                line.show(player)
-            }
+class QuestBehaviors() {
+    val lines = mutableListOf<Behavior>()
+    suspend fun show(player: PlayerEntity) {
+        for (line in lines) {
+            line.play(player)
         }
     }
 }
-@Serializable
-sealed class DialogueLine() {
-    abstract suspend fun show(player : PlayerEntity)
-    class Delay(val delay: Duration) : DialogueLine(){
-        override suspend fun show(player: PlayerEntity) {
+// 아이템 부여, 대화, 선택지
+sealed class Behavior() {
+    abstract suspend fun play(player : PlayerEntity)
+    class Delay(val delay: Duration) : Behavior(){
+        override suspend fun play(player: PlayerEntity) {
             delay(delay)
         }
     }
-    class Npc()
+    class GiveItem(val item : ItemStack) : Behavior(){
+        override suspend fun play(player: PlayerEntity) {
+            player.inventory.offerOrDrop(item)
+        }
+    }
+    class Npc(val npc : io.github.yoonseo6399.rpgquest.quest.npc.Npc, val text: Text) : Behavior(){
+        override suspend fun play(player: PlayerEntity) {
+            player.sendMessage(text,false)
+        }
+    }
 }
 
 //class DialogueBuilder(){
@@ -89,4 +118,3 @@ sealed class DialogueLine() {
 //        return DialogueLine.Delay(duration)
 //    }
 //}
-class Npc(entity: Entity)

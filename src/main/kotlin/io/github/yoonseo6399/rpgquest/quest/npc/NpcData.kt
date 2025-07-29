@@ -1,37 +1,72 @@
 package io.github.yoonseo6399.rpgquest.quest.npc
 
+import com.mojang.datafixers.util.Function3
 import com.mojang.serialization.Codec
 import com.mojang.serialization.codecs.RecordCodecBuilder
 import io.github.yoonseo6399.rpgquest.Rpgquest
-import io.github.yoonseo6399.rpgquest.kserializerToCodec
-import kotlinx.serialization.Serializable
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType
+import net.minecraft.component.ComponentType
+import net.minecraft.component.DataComponentTypes
+import net.minecraft.component.type.NbtComponent
 import net.minecraft.entity.Entity
+import net.minecraft.nbt.NbtCompound
+import net.minecraft.nbt.NbtElement
+import net.minecraft.nbt.NbtOps
 import net.minecraft.util.Identifier
+import net.minecraft.util.StringIdentifiable
+import java.util.Optional
 
-@Serializable
+
 data class NpcData(
     val name: String,val type : NpcType
-)
-@Serializable
-enum class NpcType {
-    Mapper,Archaeologist
+){
+    companion object {
+        val CODEC = RecordCodecBuilder.create { i -> i.group(
+            Codec.STRING.fieldOf("name").forGetter(NpcData::name),
+            NpcType.CODEC.fieldOf("type").forGetter(NpcData::type)
+        ).apply(i,::NpcData) }
+    }
 }
-val NPC_DATA_ATTACHMENT: AttachmentType<NpcData> = AttachmentRegistry.createPersistent(
-    Identifier.of(Rpgquest.MOD_ID,"npc_data"),
-    kserializerToCodec(NpcData.serializer())
-)
+enum class NpcType : StringIdentifiable {
+    Mapper,Archaeologist;
+    companion object {
+        val CODEC = StringIdentifiable.createCodec(NpcType::values)
+    }
+
+    override fun asString(): String? {
+        return toString()
+    }
+}
+
 
 val Entity.npcData: NpcData?
-    get() = this.getAttached(NPC_DATA_ATTACHMENT)
+    get() {
+        var npcData : NpcData? = null
+        this.get(DataComponentTypes.CUSTOM_DATA)?.apply { npcData = it.toNpcData() }
+        return npcData
+    }
 
-fun Entity.isNpc(): Boolean = this.hasAttached(NPC_DATA_ATTACHMENT)
+fun NpcData.toNbtElement(): NbtElement? {
+    return NpcData.CODEC.encodeStart(NbtOps.INSTANCE, this).result().let { if(it.isPresent) it.get() else null }
+}
+
+fun NbtCompound.toNpcData(): NpcData? {
+    return NpcData.CODEC.parse(NbtOps.INSTANCE, get("npc_data")).result().let { if(it.isPresent) it.get() else null }
+}
+
+fun Entity.isNpc(): Boolean = npcData != null
 
 fun Entity.setNpcData(data: NpcData) {
-    this.setAttached(NPC_DATA_ATTACHMENT, data)
+    val compound = get(DataComponentTypes.CUSTOM_DATA)?.apply { nbtCompound ->
+        nbtCompound.put("npc_data",data.toNbtElement())
+    }
+    this.setComponent(DataComponentTypes.CUSTOM_DATA,compound)
 }
+//fun <T> Entity.setCustomData(type : AttachmentType<T>,data: T) {
+//    val compound = get(DataComponentTypes.CUSTOM_DATA)?.apply { nbtCompound ->
+//        nbtCompound.put(key,data.toNbtElement())
+//    }
+//    this.setComponent(DataComponentTypes.CUSTOM_DATA,compound)
+//}
 
-fun Entity.removeNpcData() {
-    this.removeAttached(NPC_DATA_ATTACHMENT)
-}

@@ -1,6 +1,6 @@
-[00:20:53] [main/WARN] (FabricLoader/Knot) Class path entries reference missing files: /Users/apple/IdeaProjects/Rpgquest/build/classes/java/main - the game may not load properly!
-[00:20:53] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 1.21.7 with Fabric Loader 0.16.14
-[00:20:54] [main/INFO] (FabricLoader) Loading 42 mods:
+[19:08:04] [main/WARN] (FabricLoader/Knot) Class path entries reference missing files: C:\Users\juhoj\IdeaProjects\Rpgquest\build\classes\java\main - the game may not load properly!
+[19:08:04] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 1.21.7 with Fabric Loader 0.16.14
+[19:08:05] [main/INFO] (FabricLoader) Loading 42 mods:
 	- fabric-api 0.129.0+1.21.7
 	- fabric-api-base 0.4.64+9ec45cd86c
 	- fabric-api-lookup-api-v1 1.6.100+946bf4c36c
@@ -43,46 +43,44 @@
 	- minecraft 1.21.7
 	- mixinextras 0.4.1
 	- rpgquest 1.0-SNAPSHOT
-[00:20:54] [main/INFO] (FabricLoader/Mixin) SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/Users/apple/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.15.5+mixin.0.8.7/22f9eb729e216a091673a574a5906dc1b9027fb3/sponge-mixin-0.15.5+mixin.0.8.7.jar Service=Knot/Fabric Env=SERVER
-[00:20:56] [main/INFO] (FabricLoader/Mixin) Loaded Fabric development mappings for mixin remapper!
-[00:20:56] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_21
-[00:21:00] [main/INFO] (FabricLoader/MixinExtras|Service) Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.4.1).
-[00:21:27] [main/INFO] (Minecraft) Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, name=PROD]
-[00:21:30] [main/INFO] (Minecraft) Loaded 1407 recipes
-[00:21:30] [main/INFO] (Minecraft) Loaded 1520 advancements
-[00:21:30] [main/INFO] (BiomeModificationImpl) Applied 0 biome modifications to 0 of 65 new biomes in 2.635 ms
-[00:21:30] [Server thread/INFO] (rpgquest) CoroutineScope Initializing
-[00:21:30] [Server thread/INFO] (Minecraft) Starting minecraft server version 1.21.7
-[00:21:30] [Server thread/INFO] (Minecraft) Loading properties
-[00:21:30] [Server thread/INFO] (Minecraft) Default game type: SURVIVAL
-[00:21:30] [Server thread/INFO] (Minecraft) Generating keypair
-[00:21:31] [Server thread/INFO] (Minecraft) Starting Minecraft server on *:25565
-[00:21:31] [Server thread/INFO] (Minecraft) Using default channel type
-[00:21:31] [Server thread/INFO] (Minecraft) Preparing level "world"
-[00:21:32] [Server thread/INFO] (Minecraft) Preparing start region for dimension minecraft:overworld
-[00:21:34] [Worker-Main-7/INFO] (Minecraft) Preparing spawn area: 0%
-[00:21:34] [Worker-Main-7/INFO] (Minecraft) Preparing spawn area: 0%
-[00:21:34] [Worker-Main-7/INFO] (Minecraft) Preparing spawn area: 0%
-[00:21:34] [Worker-Main-7/INFO] (Minecraft) Preparing spawn area: 0%
-[00:21:34] [Worker-Main-7/INFO] (Minecraft) Preparing spawn area: 0%
-[00:21:34] [Worker-Main-7/INFO] (Minecraft) Preparing spawn area: 0%
-[00:21:35] [Server thread/WARN] (fabric-data-attachment-api-v1) Skipping invalid attachments: Found unknown attachment type rpgquest:npc_data; Found unknown attachment type rpgquest:npc_data missed input: {"rpgquest:npc_data":'{"name":"yes","type":"Mapper"}'}
-[00:21:35] [Server thread/INFO] (Minecraft) Time elapsed: 3088 ms
-[00:21:35] [Server thread/INFO] (Minecraft) Done (3.699s)! For help, type "help"
-[00:21:35] [Server thread/INFO] (Minecraft) Unknown or incomplete command, see below for error
-[00:21:35] [Server thread/INFO] (Minecraft) <--[HERE]
-[00:21:42] [User Authenticator #1/INFO] (Minecraft) UUID of player command_juho is 71093b50-9ff8-4330-abb5-f245d3beb513
-[00:21:43] [Server thread/INFO] (Minecraft) command_juho[/127.0.0.1:53946] logged in with entity id 86 at (53.30000001192093, 78.11650136792812, -807.6999999880791)
-[00:21:43] [Server thread/INFO] (Minecraft) command_juho joined the game
-[00:54:01] [Server thread/INFO] (Minecraft) Stopping the server
-[00:54:01] [Server thread/INFO] (rpgquest) Canceling RpgScope
-[00:54:01] [Server thread/INFO] (Minecraft) Stopping server
-[00:54:01] [Server thread/INFO] (Minecraft) Saving players
-[00:54:01] [Server thread/INFO] (Minecraft) Saving worlds
-[00:54:01] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
-[00:54:02] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
-[00:54:02] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
-[00:54:02] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
-[00:54:02] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
-[00:54:02] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
-[00:54:02] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
+[19:08:05] [main/INFO] (FabricLoader/Mixin) SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/C:/Users/juhoj/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.15.5+mixin.0.8.7/22f9eb729e216a091673a574a5906dc1b9027fb3/sponge-mixin-0.15.5+mixin.0.8.7.jar Service=Knot/Fabric Env=SERVER
+[19:08:05] [main/INFO] (FabricLoader/Mixin) Loaded Fabric development mappings for mixin remapper!
+[19:08:05] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_21
+[19:08:06] [main/INFO] (FabricLoader/MixinExtras|Service) Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.4.1).
+[19:08:15] [main/INFO] (Minecraft) Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, name=PROD]
+[19:08:17] [main/INFO] (Minecraft) Loaded 1407 recipes
+[19:08:17] [main/INFO] (Minecraft) Loaded 1520 advancements
+[19:08:18] [main/INFO] (BiomeModificationImpl) Applied 0 biome modifications to 0 of 65 new biomes in 1.170 ms
+[19:08:18] [Server thread/INFO] (rpgquest) CoroutineScope Initializing
+[19:08:18] [Server thread/INFO] (Minecraft) Starting minecraft server version 1.21.7
+[19:08:18] [Server thread/INFO] (Minecraft) Loading properties
+[19:08:18] [Server thread/INFO] (Minecraft) Default game type: SURVIVAL
+[19:08:18] [Server thread/INFO] (Minecraft) Generating keypair
+[19:08:18] [Server thread/INFO] (Minecraft) Starting Minecraft server on *:25565
+[19:08:18] [Server thread/INFO] (Minecraft) Using default channel type
+[19:08:18] [Server thread/INFO] (Minecraft) Preparing level "world"
+[19:08:19] [Server thread/INFO] (Minecraft) Preparing start region for dimension minecraft:overworld
+[19:08:20] [Worker-Main-2/INFO] (Minecraft) Preparing spawn area: 0%
+[19:08:20] [Worker-Main-2/INFO] (Minecraft) Preparing spawn area: 0%
+[19:08:20] [Worker-Main-2/INFO] (Minecraft) Preparing spawn area: 0%
+[19:08:20] [Worker-Main-2/INFO] (Minecraft) Preparing spawn area: 71%
+[19:08:20] [Server thread/INFO] (Minecraft) Time elapsed: 1791 ms
+[19:08:20] [Server thread/INFO] (Minecraft) Done (2.358s)! For help, type "help"
+[19:08:33] [User Authenticator #1/INFO] (Minecraft) UUID of player command_juho is 71093b50-9ff8-4330-abb5-f245d3beb513
+[19:08:34] [Server thread/INFO] (Minecraft) command_juho[/127.0.0.1:64151] logged in with entity id 93 at (62.2466083334317, 86.11254541322829, -793.4358799369245)
+[19:08:34] [Server thread/INFO] (Minecraft) command_juho joined the game
+[19:08:43] [Server thread/INFO] (Minecraft) command_juho has made the advancement [Diamonds!]
+[19:12:40] [Server thread/INFO] (Minecraft) command_juho lost connection: Disconnected
+[19:12:40] [Server thread/INFO] (Minecraft) command_juho left the game
+[19:12:49] [Server thread/INFO] (Minecraft) Stopping the server
+[19:12:49] [Server thread/INFO] (rpgquest) Canceling RpgScope
+[19:12:49] [Server thread/INFO] (Minecraft) Stopping server
+[19:12:49] [Server thread/INFO] (Minecraft) Saving players
+[19:12:49] [Server thread/INFO] (Minecraft) Saving worlds
+[19:12:49] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
+[19:12:49] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
+[19:12:49] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
+[19:12:49] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
+[19:12:49] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
+[19:12:49] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
+[19:12:49] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved

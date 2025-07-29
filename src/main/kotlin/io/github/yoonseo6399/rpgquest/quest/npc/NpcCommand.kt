@@ -59,7 +59,7 @@ object NpcCommand {
                                     context.source.sendError(Text.literal("NPC type mismatch : $rawType"))
                                     return@executes 0
                                 }
-                                entity.setAttached(NPC_DATA_ATTACHMENT, NpcData(name,type))
+                                entity.setNpcData(NpcData(name,type))
                                 return@executes 1
                             }
                     )
@@ -80,30 +80,3 @@ object NpcCommand {
     }
     //val InvalidChoiceException = DynamicCommandExceptionType { id -> Text.literal("'$id'는 유효한 선택이 아닙니다.") }
 }
-//class ListedChoiceArgumentType(val list : List<String>) : ArgumentType<String> {
-//
-//    @Throws(CommandSyntaxException::class)
-//    override fun parse(reader: StringReader): String {
-//        val argument = reader.string
-//        if(list.contains(argument)) {
-//
-//            return argument
-//        }
-//        throw InvalidChoiceException.create(argument)
-//    }
-//
-//    override fun <S : Any?> listSuggestions(
-//        context: CommandContext<S?>?,
-//        builder: SuggestionsBuilder?
-//    ): CompletableFuture<Suggestions?>? {
-//        return CommandSource.suggestMatching(list, builder)
-//    }
-//
-//    companion object {
-//        fun listedChoice(list : List<String>) = ListedChoiceArgumentType(list)
-//
-//        val InvalidChoiceException = DynamicCommandExceptionType { id ->
-//            Text.literal("'${id}'는 유효한 선택이 아닙니다.")
-//        }
-//    }
-//}
