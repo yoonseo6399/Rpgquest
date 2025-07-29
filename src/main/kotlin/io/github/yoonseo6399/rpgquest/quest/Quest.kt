@@ -3,20 +3,13 @@ package io.github.yoonseo6399.rpgquest.quest
 import io.github.yoonseo6399.rpgquest.RpgCoroutineScope
 import io.github.yoonseo6399.rpgquest.Rpgquest
 import io.github.yoonseo6399.rpgquest.quest.npc.Npc
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.serialization.Serializable
-import net.minecraft.entity.Entity
 import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.item.ItemConvertible
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
-import net.minecraft.registry.Registry
-import net.minecraft.registry.RegistryKeys
 import net.minecraft.text.Text
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.Vec3d
-import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
 val testBehaviors = QuestBehaviors().apply {
@@ -28,12 +21,10 @@ val testBehaviors = QuestBehaviors().apply {
         Behavior.Npc(Npc("a"), Text.literal("I'll give you some DIAMOND!!!!!!!!"))
     ))
 }
-val testQuest = Quest("okay..? this is Quest Title?","firstQuest", QuestCondition.Arrive(Vec3d(71.0, 68.0, -795.0),5.0),null,testBehaviors,
+val testQuest = Quest(QuestCondition.Arrive(Vec3d(71.0, 68.0, -795.0),5.0),null,testBehaviors,
     Quest.Settings.Default.apply { notifyActivation = Text.literal("a Quest Notification") })
 // 아이템 얻기, 선행 퀘스트 달성, 특정 장소 도달, npc 상호작용
-open class Quest(val title : String, val id : String, val startCondition: QuestCondition?, val subQuest: Quest?, val behavior: QuestBehaviors, val settings: Settings){
-    val identifier
-        get() = Identifier.of(Rpgquest.MOD_ID, "quest.$id")
+open class Quest(val startCondition: QuestCondition?, val subQuest: Quest?, val behavior: QuestBehaviors, val settings: Settings){
     val LINER get() = Text.literal("-------------------------------------------------------------")
 
     open fun notify(player: PlayerEntity) {
@@ -49,15 +40,13 @@ open class Quest(val title : String, val id : String, val startCondition: QuestC
     }
 }
 open class ActiveQuest(
-    title: String,
-    id: String,
     startCondition: QuestCondition?,
     subQuest: Quest?,
     behavior: QuestBehaviors,
     settings: Settings,
     val player: PlayerEntity
-) : Quest(title, id, startCondition, subQuest, behavior, settings) {
-    constructor(quest: Quest,player: PlayerEntity) : this(quest.title,quest.id,quest.startCondition,quest.subQuest,quest.behavior,quest.settings,player)
+) : Quest(startCondition, subQuest, behavior, settings) {
+    constructor(quest: Quest,player: PlayerEntity) : this(quest.startCondition,quest.subQuest,quest.behavior,quest.settings,player)
     init {
         RpgCoroutineScope.launch {
             if(settings.notifyActivation != null) notify(player)
@@ -69,52 +58,3 @@ open class ActiveQuest(
         }
     }
 }
-object QuestManager {
-    val activeQuest = mutableListOf<ActiveQuest>()
-    fun completion(player: PlayerEntity,quest: Quest) {
-        player.sendMessage(Text.literal("퀘스트를 끝마쳤습니다"),false)
-    }
-    fun assign(player: PlayerEntity,quest: Quest) : ActiveQuest{
-        return ActiveQuest(quest,player).also { activeQuest += it }
-    }
-}
-
-class QuestBehaviors() {
-    val lines = mutableListOf<Behavior>()
-    suspend fun show(player: PlayerEntity) {
-        for (line in lines) {
-            line.play(player)
-        }
-    }
-}
-// 아이템 부여, 대화, 선택지
-sealed class Behavior() {
-    abstract suspend fun play(player : PlayerEntity)
-    class Delay(val delay: Duration) : Behavior(){
-        override suspend fun play(player: PlayerEntity) {
-            delay(delay)
-        }
-    }
-    class GiveItem(val item : ItemStack) : Behavior(){
-        override suspend fun play(player: PlayerEntity) {
-            player.inventory.offerOrDrop(item)
-        }
-    }
-    class Npc(val npc : io.github.yoonseo6399.rpgquest.quest.npc.Npc, val text: Text) : Behavior(){
-        override suspend fun play(player: PlayerEntity) {
-            player.sendMessage(text,false)
-        }
-    }
-}
-
-//class DialogueBuilder(){
-//    fun npc(text : String) : DialogueLine{
-//
-//    }
-//    fun player(text: String) : DialogueLine{
-//
-//    }
-//    fun delay(duration: Duration) : DialogueLine{
-//        return DialogueLine.Delay(duration)
-//    }
-//}
