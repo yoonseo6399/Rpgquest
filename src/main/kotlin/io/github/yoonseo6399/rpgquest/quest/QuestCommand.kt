@@ -2,6 +2,7 @@ package io.github.yoonseo6399.rpgquest.quest
 
 import com.mojang.brigadier.CommandDispatcher
 import com.mojang.brigadier.arguments.StringArgumentType
+import io.github.yoonseo6399.rpgquest.PersistentContainer
 import io.github.yoonseo6399.rpgquest.quest.Quest.Settings
 import net.minecraft.server.command.CommandManager
 import net.minecraft.server.command.ServerCommandSource
@@ -26,8 +27,11 @@ object QuestCommand {
                     if(existingQuest != null){
                         questsPending[id] = QuestBuildHolder(existingQuest.startCondition,existingQuest.subQuest,existingQuest.behavior,existingQuest.settings)
                     }else questsPending[id] = QuestBuildHolder.Default //TODO
-
-                    context.source.player?.sendMessage(Text.literal("§anew QuestBuilder id #$id created"))
+                    val server = context.source.server
+                    val container = PersistentContainer.getServerState(server)
+                    container.questRegistry ++
+                    val questR = container.questRegistry
+                    context.source.player?.sendMessage(Text.literal("§anew QuestBuilder id #$id created Debug #$questR"))
                     context.source.player?.sendMessage(Text.literal("§ato complete the creation of Quest, /quest register <ID>"))
                     1
                 }

@@ -1,5 +1,6 @@
 package io.github.yoonseo6399.rpgquest.quest
 
+import com.mojang.serialization.codecs.RecordCodecBuilder
 import io.github.yoonseo6399.rpgquest.RpgCoroutineScope
 import io.github.yoonseo6399.rpgquest.Rpgquest
 import io.github.yoonseo6399.rpgquest.quest.npc.Npc
@@ -25,8 +26,10 @@ val testQuest = Quest(QuestCondition.Arrive(Vec3d(71.0, 68.0, -795.0),5.0),null,
     Quest.Settings.Default.apply { notifyActivation = Text.literal("a Quest Notification") })
 // 아이템 얻기, 선행 퀘스트 달성, 특정 장소 도달, npc 상호작용
 open class Quest(val startCondition: QuestCondition?, val subQuest: Quest?, val behavior: QuestBehaviors, val settings: Settings){
-    val LINER get() = Text.literal("-------------------------------------------------------------")
-
+    companion object {
+        val LINER get() = Text.literal("-------------------------------------------------------------")
+        //val CODEC = RecordCodecBuilder.create {  }
+    }
     open fun notify(player: PlayerEntity) {
         player.sendMessage(LINER,false)
         player.sendMessage(settings.notifyActivation,false)

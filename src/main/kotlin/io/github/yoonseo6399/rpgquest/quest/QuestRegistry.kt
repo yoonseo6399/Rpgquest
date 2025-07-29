@@ -1,8 +1,9 @@
 package io.github.yoonseo6399.rpgquest.quest
 
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents
+import net.minecraft.world.PersistentState
 
-object QuestRegistry {
+object QuestRegistry : PersistentState() {
     val registeredQuests = mutableMapOf<String,Quest>()
     fun initialize(){
         ServerLifecycleEvents.SERVER_STOPPING.register {
@@ -16,5 +17,4 @@ object QuestRegistry {
         registeredQuests[id] = quest
     }
     fun get(id : String) = registeredQuests[id]
-
 }
