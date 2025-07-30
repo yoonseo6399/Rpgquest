@@ -6,11 +6,8 @@ import io.github.yoonseo6399.rpgquest.PersistentContainer
 import io.github.yoonseo6399.rpgquest.Rpgquest
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.server.MinecraftServer
-import net.minecraft.server.world.ServerWorld
 import net.minecraft.text.Text
 import net.minecraft.world.PersistentState
-import net.minecraft.world.PersistentStateType
-import net.minecraft.world.World
 import java.util.*
 
 data class QuestManager(
@@ -19,19 +16,20 @@ data class QuestManager(
     val playerActive : MutableMap<UUID, MutableSet<String>> = mutableMapOf()
 ) : PersistentState() {
     companion object {
+        val instance = QuestManager()
         private val CODEC: Codec<PersistentContainer> = RecordCodecBuilder.create { i -> i.group( //TODO
-            Codec.INT.fieldOf("questRegistry").forGetter(PersistentContainer::questRegistry)
+            Codec.INT.fieldOf("questRegistry").forGetter(PersistentContainer::questRegistry),
         ).apply(i, ::QuestManager) }
-
-        private val type = PersistentStateType(
-            Rpgquest.MOD_ID, ::QuestManager, CODEC, null
-        )
+        //private val type = PersistentStateType(
+        //    Rpgquest.MOD_ID, ::QuestManager, CODEC, null
+        //)
 
         fun getInstance(server: MinecraftServer): QuestManager {
-            val serverWorld: ServerWorld = server.getWorld(World.OVERWORLD) ?: throw IllegalStateException("Server world is null")
-            val state: QuestManager = serverWorld.persistentStateManager.getOrCreate(type)
-            state.markDirty()
-            return state
+            //val serverWorld: ServerWorld = server.getWorld(World.OVERWORLD) ?: throw IllegalStateException("Server world is null")
+            //val state: QuestManager = serverWorld.persistentStateManager.getOrCreate(type)
+            //state.markDirty()
+            //return state
+            return instance
         }
     }
     val activeQuests = mutableMapOf<ActiveQuest,String>()

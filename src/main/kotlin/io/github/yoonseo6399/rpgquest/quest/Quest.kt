@@ -1,27 +1,10 @@
 package io.github.yoonseo6399.rpgquest.quest
 
 import io.github.yoonseo6399.rpgquest.RpgCoroutineScope
-import io.github.yoonseo6399.rpgquest.quest.npc.Npc
-import io.github.yoonseo6399.rpgquest.quest.npc.NpcType
 import kotlinx.coroutines.launch
 import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
 import net.minecraft.text.Text
-import net.minecraft.util.math.Vec3d
-import kotlin.time.Duration.Companion.seconds
 
-val testBehaviors = QuestBehaviors().apply {
-    lines.addAll(listOf(
-        Behavior.Dialogue(Npc("a", NpcType.Archaeologist), Text.literal("my first Dialogue")),
-        Behavior.Delay(1 .seconds),
-        Behavior.Dialogue(Npc("a", NpcType.Archaeologist), Text.literal("my second Dialogue")),
-        Behavior.GiveItem(ItemStack(Items.DIAMOND,64)),
-        Behavior.Dialogue(Npc("a", NpcType.Archaeologist), Text.literal("I'll give you some DIAMOND!!!!!!!!"))
-    ))
-}
-val testQuest = Quest(listOf(QuestCondition.Arrive(Vec3d(71.0, 68.0, -795.0),5.0)),emptyList(),testBehaviors,
-    Quest.Settings.Default.apply { notifyActivation = Text.literal("a Quest Notification") })
 // 아이템 얻기, 선행 퀘스트 달성, 특정 장소 도달, npc 상호작용
 open class Quest(val startCondition: List<QuestCondition>, val subQuest: List<String>, val behavior: QuestBehaviors, val settings: Settings){
     companion object {

@@ -1,6 +1,6 @@
-[15:37:25] [main/WARN] (FabricLoader/Knot) Class path entries reference missing files: C:\Users\juhoj\IdeaProjects\Rpgquest\build\classes\java\main - the game may not load properly!
-[15:37:25] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 1.21.7 with Fabric Loader 0.16.14
-[15:37:25] [main/INFO] (FabricLoader) Loading 42 mods:
+[19:05:20] [main/WARN] (FabricLoader/Knot) Class path entries reference missing files: C:\Users\juhoj\IdeaProjects\Rpgquest\build\classes\java\main - the game may not load properly!
+[19:05:20] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 1.21.7 with Fabric Loader 0.16.14
+[19:05:20] [main/INFO] (FabricLoader) Loading 42 mods:
 	- fabric-api 0.129.0+1.21.7
 	- fabric-api-base 0.4.64+9ec45cd86c
 	- fabric-api-lookup-api-v1 1.6.100+946bf4c36c
@@ -43,56 +43,27 @@
 	- minecraft 1.21.7
 	- mixinextras 0.4.1
 	- rpgquest 1.0-SNAPSHOT
-[15:37:25] [main/INFO] (FabricLoader/Mixin) SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/C:/Users/juhoj/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.15.5+mixin.0.8.7/22f9eb729e216a091673a574a5906dc1b9027fb3/sponge-mixin-0.15.5+mixin.0.8.7.jar Service=Knot/Fabric Env=SERVER
-[15:37:26] [main/INFO] (FabricLoader/Mixin) Loaded Fabric development mappings for mixin remapper!
-[15:37:26] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_21
-[15:37:27] [main/INFO] (FabricLoader/MixinExtras|Service) Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.4.1).
-[15:37:35] [main/INFO] (Minecraft) Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, name=PROD]
-[15:37:37] [main/INFO] (Minecraft) Loaded 1407 recipes
-[15:37:37] [main/INFO] (Minecraft) Loaded 1520 advancements
-[15:37:38] [main/INFO] (BiomeModificationImpl) Applied 0 biome modifications to 0 of 65 new biomes in 3.841 ms
-[15:37:38] [Server thread/INFO] (rpgquest) CoroutineScope Initializing
-[15:37:38] [Server thread/INFO] (Minecraft) Starting minecraft server version 1.21.7
-[15:37:38] [Server thread/INFO] (Minecraft) Loading properties
-[15:37:38] [Server thread/INFO] (Minecraft) Default game type: SURVIVAL
-[15:37:38] [Server thread/INFO] (Minecraft) Generating keypair
-[15:37:38] [Server thread/INFO] (Minecraft) Starting Minecraft server on *:25565
-[15:37:38] [Server thread/INFO] (Minecraft) Using default channel type
-[15:37:38] [Server thread/INFO] (Minecraft) Preparing level "world"
-[15:37:39] [Server thread/INFO] (Minecraft) Preparing start region for dimension minecraft:overworld
-[15:37:40] [Worker-Main-5/INFO] (Minecraft) Preparing spawn area: 0%
-[15:37:40] [Worker-Main-5/INFO] (Minecraft) Preparing spawn area: 0%
-[15:37:40] [Worker-Main-5/INFO] (Minecraft) Preparing spawn area: 0%
-[15:37:40] [Server thread/INFO] (Minecraft) Time elapsed: 1420 ms
-[15:37:40] [Server thread/INFO] (Minecraft) Done (2.169s)! For help, type "help"
-[15:38:40] [Server thread/INFO] (Minecraft) Server empty for 60 seconds, pausing
-[15:39:03] [User Authenticator #1/INFO] (Minecraft) UUID of player command_juho is 71093b50-9ff8-4330-abb5-f245d3beb513
-[15:39:04] [Server thread/INFO] (Minecraft) command_juho[/127.0.0.1:60431] logged in with entity id 78 at (54.278988443124234, 76.62611552405195, -798.4861105731045)
-[15:39:04] [Server thread/INFO] (Minecraft) command_juho joined the game
-[15:39:11] [Server thread/INFO] (Minecraft) [command_juho: Gamerule doWeatherCycle is now set to: false]
-[15:39:17] [Server thread/INFO] (Minecraft) [command_juho: Set the weather to clear]
-[15:40:09] [Server thread/INFO] (Minecraft) [command_juho: §a새로운 퀘스트 빌더 id #tlqkf 를 생성하였습니다.]
-[15:40:23] [Server thread/INFO] (Minecraft) [command_juho: 퀘스트#tlqkf 의 행동 리스트를 확인합니다.]
-[15:40:30] [Server thread/INFO] (Minecraft) [command_juho: 퀘스트#tlqkf 의 행동 리스트를 수정했습니다]
-[15:40:32] [Server thread/INFO] (Minecraft) [command_juho: 퀘스트#tlqkf 의 행동 리스트를 확인합니다.]
-[15:42:45] [Server thread/INFO] (Minecraft) [command_juho: 퀘스트#tlqkf 의 행동 리스트를 수정했습니다, index : #1]
-[15:42:55] [Server thread/INFO] (Minecraft) [command_juho: 퀘스트#tlqkf 의 행동 리스트를 수정했습니다]
-[15:43:07] [Server thread/INFO] (Minecraft) [command_juho: 퀘스트#tlqkf 의 행동 리스트를 수정했습니다, index : #3]
-[15:43:55] [Server thread/INFO] (Minecraft) Unknown or incomplete command, see below for error
-[15:43:55] [Server thread/INFO] (Minecraft) <--[HERE]
-[15:43:56] [Server thread/INFO] (Minecraft) Unknown or incomplete command, see below for error
-[15:43:56] [Server thread/INFO] (Minecraft) <--[HERE]
-[15:48:10] [Server thread/INFO] (Minecraft) [command_juho: 퀘스트#tlqkf 의 행동 리스트를 수정했습니다]
-[15:48:20] [Server thread/INFO] (Minecraft) [command_juho: 퀘스트#tlqkf 의 행동 리스트를 확인합니다.]
-[17:28:08] [Server thread/INFO] (Minecraft) [command_juho: Stopping the server]
-[17:28:08] [Server thread/INFO] (rpgquest) Canceling RpgScope
-[17:28:08] [Server thread/INFO] (Minecraft) Stopping server
-[17:28:08] [Server thread/INFO] (Minecraft) Saving players
-[17:28:08] [Server thread/INFO] (Minecraft) Saving worlds
-[17:28:09] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
-[17:28:09] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
-[17:28:09] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
-[17:28:09] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
-[17:28:09] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
-[17:28:09] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
-[17:28:09] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
+[19:05:20] [main/INFO] (FabricLoader/Mixin) SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/C:/Users/juhoj/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.15.5+mixin.0.8.7/22f9eb729e216a091673a574a5906dc1b9027fb3/sponge-mixin-0.15.5+mixin.0.8.7.jar Service=Knot/Fabric Env=SERVER
+[19:05:21] [main/INFO] (FabricLoader/Mixin) Loaded Fabric development mappings for mixin remapper!
+[19:05:21] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_21
+[19:05:21] [main/INFO] (FabricLoader/MixinExtras|Service) Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.4.1).
+[19:05:33] [main/INFO] (Minecraft) Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, name=PROD]
+[19:05:35] [main/INFO] (Minecraft) Loaded 1407 recipes
+[19:05:35] [main/INFO] (Minecraft) Loaded 1520 advancements
+[19:05:36] [main/INFO] (BiomeModificationImpl) Applied 0 biome modifications to 0 of 65 new biomes in 2.579 ms
+[19:05:36] [Server thread/INFO] (rpgquest) CoroutineScope Initializing
+[19:05:36] [Server thread/INFO] (Minecraft) Starting minecraft server version 1.21.7
+[19:05:36] [Server thread/INFO] (Minecraft) Loading properties
+[19:05:36] [Server thread/INFO] (Minecraft) Default game type: SURVIVAL
+[19:05:36] [Server thread/INFO] (Minecraft) Generating keypair
+[19:05:36] [Server thread/INFO] (Minecraft) Starting Minecraft server on *:25565
+[19:05:36] [Server thread/INFO] (Minecraft) Using default channel type
+[19:05:36] [Server thread/INFO] (Minecraft) Preparing level "world"
+[19:05:37] [Server thread/INFO] (Minecraft) Preparing start region for dimension minecraft:overworld
+[19:05:38] [Worker-Main-4/INFO] (Minecraft) Preparing spawn area: 0%
+[19:05:38] [Worker-Main-4/INFO] (Minecraft) Preparing spawn area: 0%
+[19:05:38] [Worker-Main-4/INFO] (Minecraft) Preparing spawn area: 0%
+[19:05:38] [Worker-Main-4/INFO] (Minecraft) Preparing spawn area: 0%
+[19:05:38] [Server thread/INFO] (Minecraft) Time elapsed: 1830 ms
+[19:05:38] [Server thread/INFO] (Minecraft) Done (2.241s)! For help, type "help"
+[19:06:38] [Server thread/INFO] (Minecraft) Server empty for 60 seconds, pausing

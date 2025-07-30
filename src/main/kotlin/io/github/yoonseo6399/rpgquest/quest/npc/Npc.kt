@@ -17,7 +17,7 @@ data class Npc(
     companion object {
         val CODEC = RecordCodecBuilder.create { i -> i.group(
             Codec.STRING.fieldOf("name").forGetter(Npc::name),
-            NpcType.CODEC.fieldOf("type").forGetter(Npc::type)
+            NpcType.CODEC.fieldOf("type").forGetter(Npc::type),
         ).apply(i,::Npc) }
     }
 
