@@ -2,12 +2,15 @@ package io.github.yoonseo6399.rpgquest.quest
 
 import com.mojang.serialization.Codec
 import com.mojang.serialization.codecs.RecordCodecBuilder
-import io.github.yoonseo6399.rpgquest.PersistentContainer
-import io.github.yoonseo6399.rpgquest.Rpgquest
+    import io.github.yoonseo6399.rpgquest.Rpgquest
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.server.MinecraftServer
+import net.minecraft.server.world.ServerWorld
 import net.minecraft.text.Text
+import net.minecraft.util.Uuids
 import net.minecraft.world.PersistentState
+import net.minecraft.world.PersistentStateType
+import net.minecraft.world.World
 import java.util.*
 
 data class QuestManager(
@@ -16,20 +19,23 @@ data class QuestManager(
     val playerActive : MutableMap<UUID, MutableSet<String>> = mutableMapOf()
 ) : PersistentState() {
     companion object {
-        val instance = QuestManager()
-        private val CODEC: Codec<PersistentContainer> = RecordCodecBuilder.create { i -> i.group( //TODO
-            Codec.INT.fieldOf("questRegistry").forGetter(PersistentContainer::questRegistry),
+        //val instance = QuestManager()
+        val f : Codec<MutableMap<String, Quest>> = Codec.unboundedMap(Codec.STRING,Quest.CODEC).xmap({ it.toMutableMap() },{ it.toMap() })
+        val s = Codec.unboundedMap(Uuids.CODEC,Codec.STRING.listOf().xmap({ it.toMutableSet() },{ it.toList() })).xmap({ it.toMutableMap() },{ it.toMap() })
+        private val CODEC: Codec<QuestManager> = RecordCodecBuilder.create { i -> i.group( //TODO
+            f.fieldOf("registeredQuests").forGetter(QuestManager::registeredQuests),
+            s.fieldOf("playerDone").forGetter { it.playerDone },
+            s.fieldOf("playerActive").forGetter { it.playerActive },
         ).apply(i, ::QuestManager) }
-        //private val type = PersistentStateType(
-        //    Rpgquest.MOD_ID, ::QuestManager, CODEC, null
-        //)
-
+        private val type = PersistentStateType(
+            Rpgquest.MOD_ID, ::QuestManager, CODEC, null
+        )
         fun getInstance(server: MinecraftServer): QuestManager {
-            //val serverWorld: ServerWorld = server.getWorld(World.OVERWORLD) ?: throw IllegalStateException("Server world is null")
-            //val state: QuestManager = serverWorld.persistentStateManager.getOrCreate(type)
-            //state.markDirty()
-            //return state
-            return instance
+            val serverWorld: ServerWorld = server.getWorld(World.OVERWORLD) ?: throw IllegalStateException("Server world is null")
+            val state: QuestManager = serverWorld.persistentStateManager.getOrCreate(type)
+            state.markDirty()
+            return state
+            //return instance
         }
     }
     val activeQuests = mutableMapOf<ActiveQuest,String>()

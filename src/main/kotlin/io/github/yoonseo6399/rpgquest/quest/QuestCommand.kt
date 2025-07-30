@@ -6,7 +6,6 @@ import com.mojang.brigadier.arguments.IntegerArgumentType
 import com.mojang.brigadier.arguments.StringArgumentType
 import com.mojang.brigadier.builder.LiteralArgumentBuilder
 import com.mojang.brigadier.context.CommandContext
-import io.github.yoonseo6399.rpgquest.PersistentContainer
 import io.github.yoonseo6399.rpgquest.quest.Quest.Settings
 import io.github.yoonseo6399.rpgquest.quest.npc.isNpc
 import io.github.yoonseo6399.rpgquest.quest.npc.npc
@@ -27,41 +26,9 @@ object QuestCommand {
         dispatcher.register(
 
             CommandManager.literal("quest").then(
-                CommandManager.literal("assign").then(CommandManager.argument(QUEST_ID, StringArgumentType.string()).executes { context ->
-                    val id = context.getArgument(QUEST_ID, String::class.java)
-                    val p = context.source.player ?: return@executes -1
-                    if(!QuestManager.getInstance(p.server!!).registeredQuests.contains(id)) {
-                        context.source.sendFeedback({Text.literal("§c아이디 #$id 에 퀘스트가 존재하지 않습니다.")},false)
-                        return@executes -1
-                    }
-                    context.source.sendFeedback({Text.literal("§a퀘스트 #$id 를 ${p.name} 에게 부여했습니다.")},true)
-                    QuestManager.getInstance(p.server!!).assign(p,id)
-                    1
-                })
+                assignNode(registryAccess)
             ).then(
-                CommandManager.literal("create").then(
-                    CommandManager.argument(QUESTBUILDER_ID, StringArgumentType.string()).executes { context ->
-                        val id = context.getArgument(QUESTBUILDER_ID, String::class.java)
-                        val p = context.source.player ?: return@executes -1
-
-                        if(questsPending.contains(id)) {
-                            context.source.sendFeedback({Text.literal("§c아이디 #$id 에 대하여 이미 퀘스트 빌더가 존재합니다.")},false)
-                            return@executes -1
-                        }
-                        val existingQuest = QuestManager.getInstance(p.server!!).get(id)
-                        if(existingQuest != null){
-                            questsPending[id] = QuestBuildHolder(existingQuest.startCondition.toMutableList(),existingQuest.subQuest.toMutableList(),existingQuest.behavior,existingQuest.settings)
-                            context.source.sendFeedback({Text.literal("§aswitching Existed Quest id #$id to Builder")},false)
-
-                        }else questsPending[id] = QuestBuildHolder.Default
-                        val server = context.source.server
-                        val container = PersistentContainer.getServerState(server)
-                        container.questRegistry ++ //TODO
-                        context.source.sendFeedback({Text.literal("§a새로운 퀘스트 빌더 id #$id 를 생성하였습니다.")},true)
-                        context.source.sendFeedback({ Text.literal("§a퀘스트 생성을 마치려면, /quest register <ID> 를 사용하세요.") },false)
-                        1
-                    }
-                )
+                createNode(registryAccess)
             ).then(
                 CommandManager.literal("modify").then(
                     CommandManager.argument(QUESTBUILDER_ID,StringArgumentType.string()).then(
@@ -69,36 +36,7 @@ object QuestCommand {
                     ).then(
                         conditionNode(registryAccess)
                     ).then(
-                        CommandManager.literal("SubQuest").then(
-                            CommandManager.literal("add").then(
-                                CommandManager.argument("SubQuest-ID", StringArgumentType.string()).executes { context ->
-                                    val (id,questBuildHolder) = getPendingQuest(context) ?: return@executes -1
-                                    val subid = context.getArgument("SubQuest-ID", String::class.java)
-                                    val p = context.source.player ?: return@executes -1
-                                    if(!QuestManager.getInstance(p.server!!).registeredQuests.contains(subid)) {
-                                        context.source.sendFeedback({Text.literal("§c아이디 #$subid 에 퀘스트가 존재하지 않습니다.")},false)
-                                        return@executes -1
-                                    }
-                                    questBuildHolder.subQuest.add(subid)
-                                    return@executes 1
-                                }
-                            )
-                        ).then(
-                            CommandManager.literal("remove").then(CommandManager.argument("SubQuest-ID", StringArgumentType.string()).executes { context ->
-                                val (id,questBuildHolder) = getPendingQuest(context) ?: return@executes -1
-                                val subid = context.getArgument("SubQuest-ID", String::class.java)
-                                val re = questBuildHolder.subQuest.removeIf { it == subid }
-                                if(re) context.source.sendFeedback({Text.literal("§g아이디 #$subid 퀘스트의 서브퀘스트 #$subid 를 삭제했습니다.")},true)
-                                else context.source.sendFeedback({Text.literal("§c아이디 #$subid 퀘스트의 서브퀘스트 #$subid 를 찾을 수 없습니다.")},false)
-                                return@executes 1
-                            })
-                        ).then(
-                            CommandManager.literal("list").executes { context ->
-                                val (id,questBuildHolder) = getPendingQuest(context) ?: return@executes -1
-                                context.source.sendFeedback({Text.literal("§c퀘스트 #$id 의 서브퀘스트로 지정된 퀘스트들 : ${questBuildHolder.subQuest}")},false)
-                                return@executes 1
-                            }
-                        )
+                        subQuestNode(registryAccess)
                     ).then(CommandManager.literal("discard").executes { context ->
                         val (id,questBuildHolder) = getPendingQuest(context) ?: return@executes -1
                         questsPending.remove(id)
@@ -112,6 +50,8 @@ object QuestCommand {
                         val (id,questBuildHolder) = getPendingQuest(context) ?: return@executes -1
                         val p = context.source.player ?: return@executes -1
                         QuestManager.getInstance(p.server!!).register(id,questBuildHolder.build())
+                        questsPending.remove(id)
+                        context.source.sendFeedback({Text.literal("§g퀘스트 빌더 #$id 를 퀘스트 #$id 로 저장하고 빌더를 삭제했습니다.")},true)
                         return@executes 1
                     }
                 )
@@ -132,7 +72,68 @@ object QuestCommand {
             )
         )
     }
+    fun assignNode(registryAccess: CommandRegistryAccess) = CommandManager.literal("assign").then(CommandManager.argument(QUEST_ID, StringArgumentType.string()).executes { context ->
+        val id = context.getArgument(QUEST_ID, String::class.java)
+        val p = context.source.player ?: return@executes -1
+        if(!QuestManager.getInstance(p.server!!).registeredQuests.contains(id)) {
+            context.source.sendFeedback({Text.literal("§c퀘스트 #$id 가 존재하지 않습니다.")},false)
+            return@executes -1
+        }
+        context.source.sendFeedback({Text.literal("§a퀘스트 #$id 를 ${p.name} 에게 부여했습니다.")},true)
+        QuestManager.getInstance(p.server!!).assign(p,id)
+        1
+    })
+    fun createNode(registryAccess: CommandRegistryAccess) = CommandManager.literal("create").then(
+        CommandManager.argument(QUESTBUILDER_ID, StringArgumentType.string()).executes { context ->
+            val id = context.getArgument(QUESTBUILDER_ID, String::class.java)
+            val p = context.source.player ?: return@executes -1
 
+            if(questsPending.contains(id)) {
+                context.source.sendFeedback({Text.literal("§c이미 퀘스트 빌더 #$id 가 존재합니다.")},false)
+                return@executes -1
+            }
+            val existingQuest = QuestManager.getInstance(p.server!!).get(id)
+            if(existingQuest != null){
+                questsPending[id] = QuestBuildHolder(existingQuest.startCondition.toMutableList(),existingQuest.subQuest.toMutableList(),existingQuest.behavior,existingQuest.settings)
+                context.source.sendFeedback({Text.literal("§aswitching Existed Quest id #$id to Builder")},false)
+
+            }else questsPending[id] = QuestBuildHolder.Default
+            context.source.sendFeedback({Text.literal("§a새로운 퀘스트 빌더 #$id 를 생성하였습니다.")},true)
+            context.source.sendFeedback({ Text.literal("§a퀘스트 생성을 마치려면, /quest register <ID> 를 사용하세요.") },false)
+            1
+        }
+    )
+    fun subQuestNode(registryAccess: CommandRegistryAccess) = CommandManager.literal("SubQuest").then(
+        CommandManager.literal("add").then(
+            CommandManager.argument("SubQuest-ID", StringArgumentType.string()).executes { context ->
+                val (id,questBuildHolder) = getPendingQuest(context) ?: return@executes -1
+                val subid = context.getArgument("SubQuest-ID", String::class.java)
+                val p = context.source.player ?: return@executes -1
+                if(!QuestManager.getInstance(p.server!!).registeredQuests.contains(subid)) {
+                    context.source.sendFeedback({Text.literal("§c아이디 #$subid 에 퀘스트가 존재하지 않습니다.")},false)
+                    return@executes -1
+                }
+                questBuildHolder.subQuest.add(subid)
+                context.source.sendFeedback({Text.literal("§g퀘스트 #$id 에 서브퀘스트 #$subid 를 추가했습니다")},true)
+                return@executes 1
+            }
+        )
+    ).then(
+        CommandManager.literal("remove").then(CommandManager.argument("SubQuest-ID", StringArgumentType.string()).executes { context ->
+            val (id,questBuildHolder) = getPendingQuest(context) ?: return@executes -1
+            val subid = context.getArgument("SubQuest-ID", String::class.java)
+            val re = questBuildHolder.subQuest.removeIf { it == subid }
+            if(re) context.source.sendFeedback({Text.literal("§g아이디 #$subid 퀘스트의 서브퀘스트 #$subid 를 삭제했습니다.")},true)
+            else context.source.sendFeedback({Text.literal("§c아이디 #$subid 퀘스트의 서브퀘스트 #$subid 를 찾을 수 없습니다.")},false)
+            return@executes 1
+        })
+    ).then(
+        CommandManager.literal("list").executes { context ->
+            val (id,questBuildHolder) = getPendingQuest(context) ?: return@executes -1
+            context.source.sendFeedback({Text.literal("§c퀘스트 #$id 의 서브퀘스트로 지정된 퀘스트들 : ${questBuildHolder.subQuest}")},false)
+            return@executes 1
+        }
+    )
     fun behaviorNode(registryAccess: CommandRegistryAccess): LiteralArgumentBuilder<ServerCommandSource> {
         return CommandManager.literal("Behavior").then(
             CommandManager.literal("add").then(
@@ -146,13 +147,13 @@ object QuestCommand {
             ).then(
                 CommandManager.literal("GiveItem").then(
                     CommandManager.argument("Item", ItemStackArgumentType.itemStack(registryAccess)).then(
-                        CommandManager.argument("Amount", IntegerArgumentType.integer(1,64))).executes { context ->
+                        CommandManager.argument("Amount", IntegerArgumentType.integer(1,64)).executes { context ->
                         val (id,questBuildHolder) = getPendingQuest(context) ?: return@executes -1
                         val item = context.getArgument("Item", ItemStackArgument::class.java).createStack(context.getArgument("Amount",Int::class.java),false)
                         questBuildHolder.behavior.add(Behavior.GiveItem(item))
                         context.source.sendFeedback({ Text.literal("퀘스트#$id 의 행동 리스트를 수정했습니다")},true)
                         1
-                    }
+                    })
                 )
             ).then(
                 CommandManager.literal("Command").then(
@@ -216,15 +217,18 @@ object QuestCommand {
     fun conditionNode(registryAccess: CommandRegistryAccess) : LiteralArgumentBuilder<ServerCommandSource> {
         return CommandManager.literal("Condition").then(
             CommandManager.literal("add").then(
-                CommandManager.literal("ArriveAt").then(CommandManager.argument("Pos", ColumnPosArgumentType.columnPos()).then(
-                    CommandManager.argument("radius", DoubleArgumentType.doubleArg(0.0)).executes { context ->
-                        val pos = context.getArgument("Pos", PosArgument::class.java).getPos(context.source)
-                        val radius = context.getArgument("radius",Double::class.java)
-                        val (id,questBuildHolder) = getPendingQuest(context) ?: return@executes -1
-                        questBuildHolder.startCondition.add(QuestCondition.Arrive(pos,radius))
-                        context.source.sendFeedback({ Text.literal("퀘스트#$id 의 조건 리스트를 수정했습니다")},true)
-                        1
-                }))
+                CommandManager.literal("ArriveAt").then(
+                    CommandManager.argument("Pos", Vec3ArgumentType.vec3()).then(
+                        CommandManager.argument("radius", DoubleArgumentType.doubleArg(0.0)).executes { context ->
+                            val pos = context.getArgument("Pos", PosArgument::class.java).getPos(context.source)
+                            val radius = context.getArgument("radius",Double::class.java)
+                            val (id,questBuildHolder) = getPendingQuest(context) ?: return@executes -1
+                            questBuildHolder.startCondition.add(QuestCondition.Arrive(pos,radius))
+                            context.source.sendFeedback({ Text.literal("퀘스트#$id 의 조건 리스트를 수정했습니다")},true)
+                            1
+                        }
+                    )
+                )
             ).then(
                 CommandManager.literal("InteractWith").then(
                     CommandManager.argument("entity", EntityArgumentType.entity()).executes { context ->
@@ -234,7 +238,7 @@ object QuestCommand {
                             context.source.sendFeedback({ Text.literal("§cNpc 로 지정된 엔티티가 아니거나, Interaction 엔티티가 아닙니다.")},false)
                             return@executes -1
                         }
-                        questBuildHolder.startCondition.add(QuestCondition.InteractWith(entity))
+                        questBuildHolder.startCondition.add(QuestCondition.InteractWith(entity.uuid))
                         context.source.sendFeedback({ Text.literal("퀘스트#$id 의 조건 리스트를 수정했습니다")},true)
                         1
                     }
@@ -275,7 +279,7 @@ object QuestCommand {
     }
 
     fun getPendingQuest(context : CommandContext<ServerCommandSource>, autoMessage : Boolean = true) : Pair<String,QuestBuildHolder>?{
-        val id = context.getArgument("Quest_ID",String::class.java) ?: return null
+        val id = context.getArgument(QUESTBUILDER_ID,String::class.java) ?: return null
         val quest = questsPending[id]
         if(quest == null && autoMessage) context.source.player?.sendMessage(Text.literal("§c퀘스트 빌더 #$id 는 존재하지 않습니다."))
         return if(quest != null) id to quest else null

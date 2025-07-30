@@ -1,18 +1,23 @@
 package io.github.yoonseo6399.rpgquest.quest
 
+import com.mojang.serialization.Codec
+import com.mojang.serialization.MapCodec
+import com.mojang.serialization.codecs.RecordCodecBuilder
 import kotlinx.coroutines.suspendCancellableCoroutine
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents
 import net.fabricmc.fabric.api.event.player.UseEntityCallback
 import net.minecraft.entity.Entity
 import net.minecraft.util.ActionResult
+import net.minecraft.util.StringIdentifiable
+import net.minecraft.util.Uuids
 import net.minecraft.util.math.Vec3d
-import java.io.Closeable
+import java.util.*
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.resume
 
 sealed class QuestCondition(
     val autoTerminate: Boolean = true
-) : Closeable {
+) {
     var activeQuest: ActiveQuest? = null
     var continuation : Continuation<Unit>? = null
     companion object {
@@ -21,7 +26,8 @@ sealed class QuestCondition(
         fun initialize(){
             ServerTickEvents.END_SERVER_TICK.register { server ->
                 val removed = mutableListOf<QuestCondition>()
-                checkForCondition.forEach {
+
+                ArrayList(checkForCondition).forEach {
                     if(it.check(it.activeQuest!!)){
                         it.continuation?.resume(Unit)
                         if(it.autoTerminate) removed.add(it)
@@ -31,7 +37,7 @@ sealed class QuestCondition(
             }
             UseEntityCallback.EVENT.register(UseEntityCallback { player, world, hand, entity, hitResult ->
                 val removed = mutableListOf<InteractWith>()
-                checkForInteraction.forEach {
+                ArrayList(checkForInteraction).forEach {
                     if(it.activeQuest!!.player == player && entity == it.entity) it.continuation?.resume(Unit)
                     if(it.autoTerminate) removed += it
                 }
@@ -39,9 +45,44 @@ sealed class QuestCondition(
                 ActionResult.SUCCESS
             })
         }
+
+        val CODEC: Codec<QuestCondition> = Type.CODEC.dispatch({ it.type }) { type ->
+            when (type) {
+                Type.Arrive -> Arrive.CODEC
+                Type.Quest -> Quest.CODEC
+                Type.InteractWith -> InteractWith.CODEC
+            }
+        }
+    }
+    abstract val type : Type
+    enum class Type : StringIdentifiable {
+        InteractWith,Arrive,Quest;
+
+        override fun asString(): String? {
+            return name
+        }
+
+        companion object {
+            val CODEC: Codec<Type> = StringIdentifiable.createCodec<Type>(Type::values)
+        }
     }
 
-    class InteractWith(val entity : Entity) : QuestCondition() {
+    class InteractWith(val uuid : UUID) : QuestCondition() {
+        private var _entity : Entity? = null
+        val entity : Entity?
+            get() {
+                if(_entity == null) _entity = activeQuest?.player?.world?.getEntity(uuid)
+                return _entity
+            }
+        companion object {
+            val CODEC: MapCodec<InteractWith> = RecordCodecBuilder.mapCodec { instance ->
+                instance.group(
+                    Uuids.CODEC.fieldOf("uuid").forGetter { it.uuid }
+                ).apply(instance, ::InteractWith)
+            }
+        }
+        override val type: Type
+            get() = Type.InteractWith
         override suspend fun await(quest: ActiveQuest){
             activeQuest = quest
             checkForInteraction += this
@@ -52,31 +93,42 @@ sealed class QuestCondition(
         override fun check(quest: ActiveQuest): Boolean {
             return false
         }
-        override fun close() {
-            checkForInteraction.remove(this)
-        }
     }
-    open class RepeatedCheck( val predicate : ActiveQuest.() -> Boolean) : QuestCondition() {
+    abstract class RepeatedCheck( val predicate : ActiveQuest.() -> Boolean = { true }) : QuestCondition() {
+
         override fun check(quest: ActiveQuest): Boolean {
             return quest.predicate()
         }
-
-        override fun close() {
-            checkForCondition.remove(this)
+    }
+    class Arrive(val pos : Vec3d,val radius : Double) : RepeatedCheck({ player.pos.distanceTo(pos) <= radius }) {
+        override val type: Type
+            get() = Type.Arrive
+        companion object {
+            val CODEC: MapCodec<Arrive> = RecordCodecBuilder.mapCodec { instance ->
+                instance.group(
+                    Vec3d.CODEC.fieldOf("pos").forGetter { it.pos },
+                    Codec.DOUBLE.fieldOf("radius").forGetter { it.radius }
+                ).apply(instance, ::Arrive)
+            }
         }
     }
-    class Arrive(pos : Vec3d,radius : Double) : RepeatedCheck({ player.pos.distanceTo(pos) <= radius })
-    class Quest(id : String) : RepeatedCheck( { player.hasDoneWith(id) } )
+    class Quest(val id : String) : RepeatedCheck( { player.hasDoneWith(id) } ) {
+        override val type: Type
+            get() = Type.Quest
+        companion object {
+            val CODEC: MapCodec<Quest> = RecordCodecBuilder.mapCodec { instance ->
+                instance.group(
+                    Codec.STRING.fieldOf("id").forGetter { it.id }
+                ).apply(instance, ::Quest)
+            }
+        }
+    }
 
 
     open fun check(quest: ActiveQuest) : Boolean = true
     open suspend fun await(quest: ActiveQuest){
         activeQuest = quest
         checkForCondition.add(this)
-        if(check(quest)) {
-            if(autoTerminate) close()
-            return
-        }
 
         return suspendCancellableCoroutine { continuation ->
             this.continuation = continuation

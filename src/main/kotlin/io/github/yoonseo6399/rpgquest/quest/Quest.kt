@@ -1,15 +1,24 @@
 package io.github.yoonseo6399.rpgquest.quest
 
+import com.mojang.serialization.Codec
+import com.mojang.serialization.codecs.RecordCodecBuilder
 import io.github.yoonseo6399.rpgquest.RpgCoroutineScope
 import kotlinx.coroutines.launch
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.text.Text
+import net.minecraft.text.TextCodecs
+import java.util.*
 
 // 아이템 얻기, 선행 퀘스트 달성, 특정 장소 도달, npc 상호작용
 open class Quest(val startCondition: List<QuestCondition>, val subQuest: List<String>, val behavior: QuestBehaviors, val settings: Settings){
     companion object {
         val LINER get() = Text.literal("-------------------------------------------------------------")
-        //val CODEC = RecordCodecBuilder.create {  }
+        val CODEC : Codec<Quest> = RecordCodecBuilder.create { i -> i.group(
+            QuestCondition.CODEC.listOf().fieldOf("startCondition").forGetter { it.startCondition },
+            Codec.STRING.listOf().fieldOf("subQuest").forGetter { it.subQuest },
+            QuestBehaviors.CODEC.fieldOf("behavior").forGetter { it.behavior },
+            Settings.CODEC.fieldOf("settings").forGetter { it.settings }
+        ).apply(i,::Quest) }
     }
     open fun notify(player: PlayerEntity) {
         player.sendMessage(LINER,false)
@@ -20,6 +29,12 @@ open class Quest(val startCondition: List<QuestCondition>, val subQuest: List<St
     data class Settings(var notifyActivation : Text? = null,var autoAssign : Boolean = false){
         companion object {
             val Default get() = Settings(null)
+            val CODEC : Codec<Settings> = RecordCodecBuilder.create { i -> i.group(
+                TextCodecs.CODEC.optionalFieldOf("notifyActivation").forGetter { Optional.ofNullable(it.notifyActivation) },
+                Codec.BOOL.fieldOf("autoAssign").forGetter { it.autoAssign },
+            ).apply(i) { n, a ->
+                Settings(if(n.isPresent) n.get() else null,a)
+            } }
         }
     }
 }

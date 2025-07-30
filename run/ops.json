@@ -1,7 +1,25 @@
 [
   {
+    "uuid": "f767d87f-e53f-49ff-a863-595e55c46313",
+    "name": "Cube_x2",
+    "level": 4,
+    "bypassesPlayerLimit": false
+  },
+  {
+    "uuid": "0234277a-e79f-4301-91ab-e7b36dcf0a5d",
+    "name": "Edwardjjang",
+    "level": 4,
+    "bypassesPlayerLimit": false
+  },
+  {
     "uuid": "71093b50-9ff8-4330-abb5-f245d3beb513",
     "name": "command_juho",
+    "level": 4,
+    "bypassesPlayerLimit": false
+  },
+  {
+    "uuid": "78fe581a-d544-4625-adcf-b1d2960bc97b",
+    "name": "irochi_loveF1",
     "level": 4,
     "bypassesPlayerLimit": false
   }
