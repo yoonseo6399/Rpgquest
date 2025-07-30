@@ -1,13 +1,15 @@
 package io.github.yoonseo6399.rpgquest.quest
 
 import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlinx.serialization.Serializable
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents
-import net.minecraft.entity.player.PlayerEntity
+import net.fabricmc.fabric.api.event.player.UseEntityCallback
+import net.minecraft.entity.Entity
+import net.minecraft.util.ActionResult
 import net.minecraft.util.math.Vec3d
 import java.io.Closeable
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.resume
+
 sealed class QuestCondition(
     val autoTerminate: Boolean = true
 ) : Closeable {
@@ -15,28 +17,46 @@ sealed class QuestCondition(
     var continuation : Continuation<Unit>? = null
     companion object {
         val checkForCondition = mutableListOf<QuestCondition>()
+        val checkForInteraction = mutableListOf<InteractWith>()
         fun initialize(){
             ServerTickEvents.END_SERVER_TICK.register { server ->
                 val removed = mutableListOf<QuestCondition>()
-                checkForCondition.filter { if(it.activeQuest != null) it.check(it.activeQuest!!) else false }.forEach {
-                    it.continuation?.resume(Unit)
-                    if(it.autoTerminate) removed.add(it)
+                checkForCondition.forEach {
+                    if(it.check(it.activeQuest!!)){
+                        it.continuation?.resume(Unit)
+                        if(it.autoTerminate) removed.add(it)
+                    }
                 }
                 checkForCondition.removeAll(removed)
             }
+            UseEntityCallback.EVENT.register(UseEntityCallback { player, world, hand, entity, hitResult ->
+                val removed = mutableListOf<InteractWith>()
+                checkForInteraction.forEach {
+                    if(it.activeQuest!!.player == player && entity == it.entity) it.continuation?.resume(Unit)
+                    if(it.autoTerminate) removed += it
+                }
+                checkForInteraction.removeAll(removed)
+                ActionResult.SUCCESS
+            })
         }
     }
 
-    class InteractNpcs(quest: Quest) : QuestCondition() {
+    class InteractWith(val entity : Entity) : QuestCondition() {
+        override suspend fun await(quest: ActiveQuest){
+            activeQuest = quest
+            checkForInteraction += this
+            return suspendCancellableCoroutine { continuation ->
+                this.continuation = continuation
+            }
+        }
+        override fun check(quest: ActiveQuest): Boolean {
+            return false
+        }
         override fun close() {
-            TODO("Not yet implemented")
+            checkForInteraction.remove(this)
         }
     }
     open class RepeatedCheck( val predicate : ActiveQuest.() -> Boolean) : QuestCondition() {
-        init {
-            checkForCondition.add(this)
-        }
-
         override fun check(quest: ActiveQuest): Boolean {
             return quest.predicate()
         }
@@ -46,12 +66,13 @@ sealed class QuestCondition(
         }
     }
     class Arrive(pos : Vec3d,radius : Double) : RepeatedCheck({ player.pos.distanceTo(pos) <= radius })
-
+    class Quest(id : String) : RepeatedCheck( { player.hasDoneWith(id) } )
 
 
     open fun check(quest: ActiveQuest) : Boolean = true
-    suspend fun await(quest: ActiveQuest){
+    open suspend fun await(quest: ActiveQuest){
         activeQuest = quest
+        checkForCondition.add(this)
         if(check(quest)) {
             if(autoTerminate) close()
             return

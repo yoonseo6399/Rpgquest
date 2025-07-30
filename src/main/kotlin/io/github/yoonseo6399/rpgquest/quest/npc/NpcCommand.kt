@@ -1,47 +1,14 @@
 package io.github.yoonseo6399.rpgquest.quest.npc
 
-import com.mojang.brigadier.Command
 import com.mojang.brigadier.CommandDispatcher
-import com.mojang.brigadier.StringReader
-import com.mojang.brigadier.arguments.ArgumentType
 import com.mojang.brigadier.arguments.StringArgumentType
-import com.mojang.brigadier.context.CommandContext
-import com.mojang.brigadier.exceptions.CommandExceptionType
-import com.mojang.brigadier.exceptions.CommandSyntaxException
-import com.mojang.brigadier.exceptions.DynamicCommandExceptionType
-import com.mojang.brigadier.exceptions.SimpleCommandExceptionType
-import com.mojang.brigadier.suggestion.Suggestions
-import com.mojang.brigadier.suggestion.SuggestionsBuilder
-import com.mojang.serialization.Codec
-import io.github.yoonseo6399.rpgquest.kserializerToCodec
-import net.fabricmc.fabric.api.command.v2.ArgumentTypeRegistry
 
 
-
-import net.minecraft.command.CommandSource
 import net.minecraft.command.EntitySelector
-import net.minecraft.command.argument.ArgumentTypes
 import net.minecraft.command.argument.EntityArgumentType
-import net.minecraft.command.argument.EnumArgumentType
-import net.minecraft.data.report.CommandSyntaxProvider
-import net.minecraft.entity.Entity
 import net.minecraft.server.command.CommandManager
 import net.minecraft.server.command.ServerCommandSource
 import net.minecraft.text.Text
-import net.minecraft.util.Identifier
-import net.minecraft.network.PacketByteBuf
-import com.google.gson.JsonObject
-import com.google.gson.JsonArray
-import java.util.concurrent.CompletableFuture
-import kotlin.jvm.Throws
-import kotlinx.serialization.KSerializer
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.builtins.ListSerializer
-import kotlinx.serialization.builtins.serializer
-import kotlinx.serialization.descriptors.SerialDescriptor
-import kotlinx.serialization.encoding.Decoder
-import kotlinx.serialization.encoding.Encoder
-import net.minecraft.command.argument.serialize.ArgumentSerializer
 
 object NpcCommand {
     fun register(dispatcher : CommandDispatcher<ServerCommandSource>){
@@ -59,7 +26,7 @@ object NpcCommand {
                                     context.source.sendError(Text.literal("NPC type mismatch : $rawType"))
                                     return@executes 0
                                 }
-                                entity.setNpcData(NpcData(name,type))
+                                entity.setNpcData(Npc(name,type))
                                 return@executes 1
                             }
                     )
@@ -71,7 +38,7 @@ object NpcCommand {
                     .executes {
                         val e = it.getArgument("entity", EntitySelector::class.java).getEntity(it.source)
                         it.source.sendFeedback({ Text.literal("is NPC? : ${e.isNpc()}") }, false)
-                        if(e.isNpc()) it.source.sendFeedback({ Text.literal("data : ${e.npcData}")},false)
+                        if(e.isNpc()) it.source.sendFeedback({ Text.literal("data : ${e.npc}")},false)
 
                         1
                     }

@@ -17,10 +17,10 @@ class Rpgquest : ModInitializer {
     }
     override fun onInitialize() {
         RpgCoroutineScope.initialize()
-        CommandRegistrationCallback.EVENT.register { dispatcher, _, _ ->
+        CommandRegistrationCallback.EVENT.register { dispatcher, registryAccess, _ ->
             HelloCommand.register(dispatcher)
             NpcCommand.register(dispatcher)
-            QuestCommand.register(dispatcher)
+            QuestCommand.register(dispatcher,registryAccess)
         }
         QuestCondition.initialize()
     }
