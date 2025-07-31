@@ -3,6 +3,7 @@ package io.github.yoonseo6399.rpgquest.quest
 import com.mojang.serialization.Codec
 import com.mojang.serialization.codecs.RecordCodecBuilder
 import io.github.yoonseo6399.rpgquest.RpgCoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.text.Text
@@ -47,8 +48,9 @@ open class ActiveQuest(
 ) : Quest(startCondition, subQuest, behavior, settings) {
     constructor(quest: Quest,player: PlayerEntity) : this(quest.startCondition,quest.subQuest,quest.behavior,quest.settings,player)
     var status : QuestStatus? = null
+    val job : Job
     init {
-        RpgCoroutineScope.launch {
+        job = RpgCoroutineScope.launch {
             if(settings.notifyActivation != null) notify(player)
             startCondition.forEachIndexed { i,e ->
                 status = QuestStatus.WaitForCondition(i)
@@ -61,6 +63,7 @@ open class ActiveQuest(
             subQuest.forEach { QuestManager.getInstance(player.server!!).assign(player,it) }
         }
     }
+    fun cancel() = job.cancel()
 }
 sealed class QuestStatus(index : Int) {
     class WaitForCondition(index: Int) : QuestStatus(index)

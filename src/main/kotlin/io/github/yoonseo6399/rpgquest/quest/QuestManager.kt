@@ -3,6 +3,7 @@ package io.github.yoonseo6399.rpgquest.quest
 import com.mojang.serialization.Codec
 import com.mojang.serialization.codecs.RecordCodecBuilder
     import io.github.yoonseo6399.rpgquest.Rpgquest
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.server.MinecraftServer
 import net.minecraft.server.world.ServerWorld
@@ -37,30 +38,61 @@ data class QuestManager(
             return state
             //return instance
         }
+        fun initialize(){
+            ServerPlayConnectionEvents.JOIN.register {handler, _, server ->
+                val player = handler.player
+                getInstance(server).handlePlayerJoin(player)
+            }
+            ServerPlayConnectionEvents.DISCONNECT.register { handler, server ->
+                getInstance(server).handlePlayerLeave(handler.player)
+            }
+        }
     }
-    val activeQuests = mutableMapOf<ActiveQuest,String>()
+    val activeQuests = mutableMapOf<UUID,MutableMap<ActiveQuest,String>>()
 
+    fun handlePlayerJoin(player: PlayerEntity){
+        makeSafe(player)
+        playerActive[player.uuid]?.intersect(getActiveQuests(player).values)?.forEach {
+            assign(player,it)
+        }
+        registeredQuests.filter { it.value.settings.autoAssign }.forEach {
+            safeAssign(player,it.key)
+        }
+    }
+    fun handlePlayerLeave(player: PlayerEntity){
+        getActiveQuests(player).forEach {
+            it.key.cancel()
+        }
+        activeQuests.remove(player.uuid)
+    }
     fun completion(player: PlayerEntity, questID: String) {
         player.sendMessage(Text.literal("퀘스트를 끝마쳤습니다"),false)
-        makeSafe(player)
         playerActive[player.uuid]!!.remove(questID)
         playerDone[player.uuid]!!.add(questID)
     }
     fun completion(playerEntity: PlayerEntity,activeQuest: ActiveQuest) {
-        val id = activeQuests[activeQuest] ?: return Rpgquest.LOGGER.warn("tlqkf 대체 어떻게 activeQuest 가 할당되지 않은상태에서 completion 했지?")
+        val id = getActiveQuests(playerEntity)[activeQuest] ?: return Rpgquest.LOGGER.warn("tlqkf 대체 어떻게 activeQuest 가 할당되지 않은상태에서 completion 했지?")
         completion(playerEntity,id)
+    }
+    fun safeAssign(player: PlayerEntity,questID : String){
+        if(getActiveQuests(player).values.contains(questID)) return
+        if(getDoneQuest(player).contains(questID)) return
+        assign(player,questID)
     }
     fun assign(player: PlayerEntity, questID: String) : ActiveQuest?{
         val quest = get(questID) ?: return null
-        makeSafe(player)
-        val acquest =ActiveQuest(quest,player)
+        val acquest = ActiveQuest(quest,player)
         playerActive[player.uuid]!! += questID
-        activeQuests += acquest to questID
+        getActiveQuests(player) += acquest to questID
         return acquest
     }
+    fun removeHistory(player: PlayerEntity,questID: String) =
+        playerDone[player.uuid]?.remove(questID)
+
     fun makeSafe(playerEntity: PlayerEntity){
         playerActive.getOrPut(playerEntity.uuid) { mutableSetOf() }
         playerDone.getOrPut(playerEntity.uuid) { mutableSetOf() }
+        activeQuests.getOrPut(playerEntity.uuid) { mutableMapOf() }
     }
 
     fun register(id : String, quest : Quest){
@@ -71,7 +103,7 @@ data class QuestManager(
     fun getDoneQuest(playerEntity: PlayerEntity) : Set<String>{
         return playerDone.getOrPut(playerEntity.uuid) { mutableSetOf() }
     }
-    fun getActiveQuest(playerEntity: PlayerEntity) = playerActive[playerEntity.uuid]
+    fun getActiveQuests(playerEntity: PlayerEntity) = activeQuests[playerEntity.uuid]!!
 }
 
 fun PlayerEntity.hasDoneWith(questID : String) = QuestManager.getInstance(this.server!!).getDoneQuest(this).contains(questID)

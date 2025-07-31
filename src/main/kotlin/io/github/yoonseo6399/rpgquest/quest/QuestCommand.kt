@@ -1,6 +1,7 @@
 package io.github.yoonseo6399.rpgquest.quest
 
 import com.mojang.brigadier.CommandDispatcher
+import com.mojang.brigadier.arguments.BoolArgumentType
 import com.mojang.brigadier.arguments.DoubleArgumentType
 import com.mojang.brigadier.arguments.IntegerArgumentType
 import com.mojang.brigadier.arguments.StringArgumentType
@@ -13,6 +14,7 @@ import net.minecraft.command.CommandRegistryAccess
 import net.minecraft.command.EntitySelector
 import net.minecraft.command.argument.*
 import net.minecraft.entity.decoration.InteractionEntity
+import net.minecraft.item.ItemStack
 import net.minecraft.server.command.CommandManager
 import net.minecraft.server.command.ServerCommandSource
 import net.minecraft.text.Text
@@ -37,6 +39,8 @@ object QuestCommand {
                         conditionNode(registryAccess)
                     ).then(
                         subQuestNode(registryAccess)
+                    ).then(
+                        settingsNode(registryAccess)
                     ).then(CommandManager.literal("discard").executes { context ->
                         val (id,questBuildHolder) = getPendingQuest(context) ?: return@executes -1
                         questsPending.remove(id)
@@ -69,6 +73,17 @@ object QuestCommand {
                     }
                     return@executes 1
                 }
+            ).then(
+                CommandManager.literal("history-clear").then(CommandManager.argument("player", EntityArgumentType.player()).then(
+                    CommandManager.argument(QUEST_ID, StringArgumentType.string()).executes { context ->
+                        val p = context.getArgument("player", EntitySelector::class.java).getPlayer(context.source)
+                        val questID = context.getArgument(QUEST_ID,String::class.java)
+                        val r = QuestManager.getInstance(p.server!!).removeHistory(p,questID)
+                        if(r != true) context.source.sendFeedback({Text.literal("§c${p.name} 의 퀘스트 #$questID 에 대한 기록이 존재하지 않습니다")},false)
+                            else context.source.sendFeedback({Text.literal("§g${p.name} 의 퀘스트 #$questID 에 대한 기록을 삭제했습니다.")},true)
+                        return@executes 1
+                    }
+                ))
             )
         )
     }
@@ -141,7 +156,7 @@ object QuestCommand {
                     val duration = context.getArgument("Duration",Int::class.java)
                     val (id,questBuildHolder) = getPendingQuest(context) ?: return@executes -1
                     questBuildHolder.behavior.add(Behavior.Delay(duration.tick))
-                    context.source.sendFeedback({ Text.literal("퀘스트#$id 의 행동 리스트를 수정했습니다")},true)
+                    context.source.sendFeedback({ Text.literal("§a퀘스트#$id 의 행동 리스트를 수정했습니다")},true)
                     1
                 })
             ).then(
@@ -151,7 +166,7 @@ object QuestCommand {
                         val (id,questBuildHolder) = getPendingQuest(context) ?: return@executes -1
                         val item = context.getArgument("Item", ItemStackArgument::class.java).createStack(context.getArgument("Amount",Int::class.java),false)
                         questBuildHolder.behavior.add(Behavior.GiveItem(item))
-                        context.source.sendFeedback({ Text.literal("퀘스트#$id 의 행동 리스트를 수정했습니다")},true)
+                        context.source.sendFeedback({ Text.literal("§a퀘스트#$id 의 행동 리스트를 수정했습니다")},true)
                         1
                     })
                 )
@@ -161,7 +176,7 @@ object QuestCommand {
                         val (id,questBuildHolder) = getPendingQuest(context) ?: return@executes -1
                         val command = context.getArgument("CommandLine",String::class.java)
                         questBuildHolder.behavior.add(Behavior.Command(command))
-                        context.source.sendFeedback({ Text.literal("퀘스트#$id 의 행동 리스트를 수정했습니다")},true)
+                        context.source.sendFeedback({ Text.literal("§a퀘스트#$id 의 행동 리스트를 수정했습니다")},true)
                         1
                     }
                 )
@@ -171,7 +186,7 @@ object QuestCommand {
                         val (id,questBuildHolder) = getPendingQuest(context) ?: return@executes -1
                         val text = context.getArgument("Text", Text::class.java)
                         questBuildHolder.behavior.add(Behavior.Dialogue(null,text))
-                        context.source.sendFeedback({ Text.literal("퀘스트#$id 의 행동 리스트를 수정했습니다")},true)
+                        context.source.sendFeedback({ Text.literal("§a퀘스트#$id 의 행동 리스트를 수정했습니다")},true)
                         1
                     }.then(
                         CommandManager.literal("--byNpc").then(
@@ -184,7 +199,7 @@ object QuestCommand {
                                     return@executes -1
                                 }
                                 questBuildHolder.behavior.add(Behavior.Dialogue(npc.npc,text))
-                                context.source.sendFeedback({ Text.literal("퀘스트#$id 의 행동 리스트를 수정했습니다.")},true)
+                                context.source.sendFeedback({ Text.literal("§a퀘스트#$id 의 행동 리스트를 수정했습니다.")},true)
                                 1
                             }
                         )
@@ -253,6 +268,19 @@ object QuestCommand {
                         1
                     }
                 )
+            ).then(
+                CommandManager.literal("ObtainItem").then(
+                    CommandManager.argument("Item", ItemStackArgumentType.itemStack(registryAccess)).then(
+                        CommandManager.argument("requiredAmount", IntegerArgumentType.integer(1)).executes { context ->
+                            val item = context.getArgument("Item", ItemStackArgument::class.java).createStack(1,false)
+                            val amount = context.getArgument("requiredAmount",Int::class.java)
+                            val (id,questBuildHolder) = getPendingQuest(context) ?: return@executes -1
+                            questBuildHolder.startCondition.add(QuestCondition.ObtainItem(item,amount))
+                            context.source.sendFeedback({ Text.literal("퀘스트#$id 의 조건 리스트를 수정했습니다")},true)
+                            1
+                        }
+                    )
+                )
             )
         ).then(
             CommandManager.literal("remove").then(CommandManager.argument("index", IntegerArgumentType.integer()).executes { context ->
@@ -277,7 +305,13 @@ object QuestCommand {
             }
         )
     }
-
+    fun settingsNode(registryAccess: CommandRegistryAccess) = CommandManager.literal("Settings").then(CommandManager.argument("autoAssign", BoolArgumentType.bool()).executes { context ->
+        val (id,questBuildHolder) = getPendingQuest(context) ?: return@executes -1
+        val b = context.getArgument("autoAssign", Boolean::class.java)
+        questBuildHolder.settings.autoAssign = b
+        context.source.sendFeedback({ Text.literal("§a퀘스트#$id 의 설정를 수정했습니다")},true)
+        return@executes 1
+    })
     fun getPendingQuest(context : CommandContext<ServerCommandSource>, autoMessage : Boolean = true) : Pair<String,QuestBuildHolder>?{
         val id = context.getArgument(QUESTBUILDER_ID,String::class.java) ?: return null
         val quest = questsPending[id]

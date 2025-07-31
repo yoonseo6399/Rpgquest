@@ -6,11 +6,16 @@ import com.mojang.serialization.codecs.RecordCodecBuilder
 import kotlinx.coroutines.suspendCancellableCoroutine
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents
 import net.fabricmc.fabric.api.event.player.UseEntityCallback
+import net.minecraft.command.EntitySelector
 import net.minecraft.entity.Entity
+import net.minecraft.entity.player.PlayerInventory
+import net.minecraft.item.ItemStack
+import net.minecraft.scoreboard.ScoreboardObjective
 import net.minecraft.util.ActionResult
 import net.minecraft.util.StringIdentifiable
 import net.minecraft.util.Uuids
 import net.minecraft.util.math.Vec3d
+import net.minecraft.world.World
 import java.util.*
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.resume
@@ -51,12 +56,13 @@ sealed class QuestCondition(
                 Type.Arrive -> Arrive.CODEC
                 Type.Quest -> Quest.CODEC
                 Type.InteractWith -> InteractWith.CODEC
+                Type.ObtainItem -> ObtainItem.CODEC
             }
         }
     }
     abstract val type : Type
     enum class Type : StringIdentifiable {
-        InteractWith,Arrive,Quest;
+        InteractWith,Arrive,Quest,ObtainItem;
 
         override fun asString(): String? {
             return name
@@ -112,6 +118,18 @@ sealed class QuestCondition(
             }
         }
     }
+    class ObtainItem(val itemStack: ItemStack,val requiredAmount : Int) : RepeatedCheck( { player.inventory.hasEnough(itemStack,requiredAmount)} ){
+        override val type: Type
+            get() = Type.ObtainItem
+        companion object {
+            val CODEC: MapCodec<ObtainItem> = RecordCodecBuilder.mapCodec { instance ->
+                instance.group(
+                    ItemStack.CODEC.fieldOf("itemStack").forGetter { it.itemStack },
+                    Codec.INT.fieldOf("requiredAmount").forGetter { it.requiredAmount }
+                ).apply(instance, ::ObtainItem)
+            }
+        }
+    }
     class Quest(val id : String) : RepeatedCheck( { player.hasDoneWith(id) } ) {
         override val type: Type
             get() = Type.Quest
@@ -134,4 +152,12 @@ sealed class QuestCondition(
             this.continuation = continuation
         }
     }
+}
+fun PlayerInventory.hasEnough(item : ItemStack,amount : Int) : Boolean{
+    var tot = 0
+    forEach {
+        if(ItemStack.areItemsAndComponentsEqual(it,item)) tot += it.count
+        if(tot >= amount) return true
+    }
+    return false
 }
