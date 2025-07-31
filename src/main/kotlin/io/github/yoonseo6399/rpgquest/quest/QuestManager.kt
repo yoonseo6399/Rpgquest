@@ -2,12 +2,11 @@ package io.github.yoonseo6399.rpgquest.quest
 
 import com.mojang.serialization.Codec
 import com.mojang.serialization.codecs.RecordCodecBuilder
-    import io.github.yoonseo6399.rpgquest.Rpgquest
+import io.github.yoonseo6399.rpgquest.Rpgquest
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.server.MinecraftServer
 import net.minecraft.server.world.ServerWorld
-import net.minecraft.text.Text
 import net.minecraft.util.Uuids
 import net.minecraft.world.PersistentState
 import net.minecraft.world.PersistentStateType
@@ -66,7 +65,6 @@ data class QuestManager(
         activeQuests.remove(player.uuid)
     }
     fun completion(player: PlayerEntity, questID: String) {
-        player.sendMessage(Text.literal("퀘스트를 끝마쳤습니다"),false)
         playerActive[player.uuid]!!.remove(questID)
         playerDone[player.uuid]!!.add(questID)
     }

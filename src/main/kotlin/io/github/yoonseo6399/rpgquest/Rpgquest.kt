@@ -7,6 +7,7 @@ import io.github.yoonseo6399.rpgquest.quest.QuestManager
 import io.github.yoonseo6399.rpgquest.quest.npc.NpcCommand
 import net.fabricmc.api.ModInitializer
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback
+import net.minecraft.SharedConstants
 import org.slf4j.LoggerFactory
 
 
@@ -17,6 +18,7 @@ class Rpgquest : ModInitializer {
         var syncMode = false
     }
     override fun onInitialize() {
+        SharedConstants.isDevelopment = true
         RpgCoroutineScope.initialize()
         QuestManager.initialize()
         CommandRegistrationCallback.EVENT.register { dispatcher, registryAccess, _ ->

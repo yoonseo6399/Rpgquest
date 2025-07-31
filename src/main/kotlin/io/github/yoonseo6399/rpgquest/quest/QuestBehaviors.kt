@@ -3,6 +3,9 @@ package io.github.yoonseo6399.rpgquest.quest
 import com.mojang.serialization.Codec
 import com.mojang.serialization.MapCodec
 import com.mojang.serialization.codecs.RecordCodecBuilder
+import io.github.yoonseo6399.rpgquest.Rpgquest
+import io.github.yoonseo6399.rpgquest.TextLike
+import io.github.yoonseo6399.rpgquest.prettyText
 import io.github.yoonseo6399.rpgquest.quest.npc.Npc
 import kotlinx.coroutines.delay
 import net.minecraft.entity.player.PlayerEntity
@@ -14,12 +17,13 @@ import net.minecraft.world.World
 import java.util.*
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.DurationUnit
 
 
 class QuestBehaviors(val lines : MutableList<Behavior> = mutableListOf<Behavior>()) : MutableList<Behavior> by lines {
     companion object {
         val CODEC : Codec<QuestBehaviors> = RecordCodecBuilder.create { i -> i.group(
-            Behavior.CODEC.listOf().fieldOf("lines").forGetter { it.lines }
+            Behavior.CODEC.listOf().xmap({ it.toMutableList() },{ it.toList() }).fieldOf("lines").forGetter { it.lines }
         ).apply(i) { QuestBehaviors(it) } }
     }
     var currentIndex = 0
@@ -32,7 +36,7 @@ class QuestBehaviors(val lines : MutableList<Behavior> = mutableListOf<Behavior>
 }
 
 // 아이템 부여, 대화, 선택지
-sealed class Behavior() {
+sealed class Behavior() : TextLike{
     abstract val type : Type
     enum class Type : StringIdentifiable {
         Delay,GiveItem,Command,Dialogue;
@@ -54,13 +58,22 @@ sealed class Behavior() {
         override suspend fun play(player: PlayerEntity) {
             delay(delay)
         }
+
+        override fun toText(): Text = Text.literal("Delay : ").append(Text.literal(delay.toString(DurationUnit.SECONDS,1)))
     }
-    class GiveItem(val item : ItemStack) : Behavior(){
+
+    class GiveItem(item : ItemStack) : Behavior(){
+        val itemStack: ItemStack = item.copy()
+        init {
+            if(itemStack.isEmpty) Rpgquest.LOGGER.error("WTF, GiveItem's ItemStack is Empty")
+            if(itemStack.count !in 1..99) Rpgquest.LOGGER.error("WTF, GiveItem's amount of ItemStack is ${item.count}")
+        }
         override val type: Type
             get() = Type.GiveItem
         override suspend fun play(player: PlayerEntity) {
-            player.inventory.offerOrDrop(item)
+            player.inventory.offerOrDrop(itemStack.copy())
         }
+        override fun toText(): Text = Text.literal("GiveItem : ").append(itemStack.prettyText()).append(Text.literal(" count : ${itemStack.count}"))
     }
 //    class TakeItem(val item : ItemStack,maxAmount: Int) : Behavior(){
 //        override suspend fun play(player: PlayerEntity) {
@@ -69,12 +82,17 @@ sealed class Behavior() {
 //        }
 //    }
     class Command(val syntax: String) : Behavior(){
-    override val type: Type
-        get() = Type.Command
-        override suspend fun play(player: PlayerEntity) {
-            val world = player.server?.getWorld(World.OVERWORLD) ?: return
-            val source = player.getCommandSource(world)
-            source.dispatcher.parse(syntax,source)
+        override val type: Type
+            get() = Type.Command
+            override suspend fun play(player: PlayerEntity) {
+                val world = player.server?.getWorld(World.OVERWORLD) ?: return
+                val source = player.getCommandSource(world).withSilent().withLevel(4)
+                player.sendMessage(Text.literal(syntax),false)
+                player.server!!.commandManager.executeWithPrefix(source,syntax)
+            }
+
+        override fun toText(): Text {
+            return Text.literal("Command : \"$syntax\"")
         }
     }
     class Dialogue(val npc : Npc? = null, val text: Text) : Behavior(){
@@ -84,6 +102,10 @@ sealed class Behavior() {
             var ftext = text
             if(npc != null) ftext = npc.namePrefix.append(text)
             player.sendMessage(ftext,false)
+        }
+
+        override fun toText(): Text {
+            return Text.literal("Dialogue : ").append(text.copy())
         }
     }
 
@@ -96,7 +118,7 @@ sealed class Behavior() {
 
         val GIVE_ITEM_CODEC: MapCodec<Behavior.GiveItem> = RecordCodecBuilder.mapCodec { instance ->
             instance.group(
-                ItemStack.CODEC.fieldOf("item").forGetter { it.item }
+                ItemStack.CODEC.fieldOf("itemStack").forGetter { it.itemStack }
             ).apply(instance) { item -> GiveItem(item) }
         }
 

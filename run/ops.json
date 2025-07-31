@@ -12,14 +12,14 @@
     "bypassesPlayerLimit": false
   },
   {
-    "uuid": "71093b50-9ff8-4330-abb5-f245d3beb513",
-    "name": "command_juho",
+    "uuid": "78fe581a-d544-4625-adcf-b1d2960bc97b",
+    "name": "irochi_loveF1",
     "level": 4,
     "bypassesPlayerLimit": false
   },
   {
-    "uuid": "78fe581a-d544-4625-adcf-b1d2960bc97b",
-    "name": "irochi_loveF1",
+    "uuid": "71093b50-9ff8-4330-abb5-f245d3beb513",
+    "name": "command_juho",
     "level": 4,
     "bypassesPlayerLimit": false
   }

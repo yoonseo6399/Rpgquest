@@ -14,11 +14,10 @@ import net.minecraft.command.CommandRegistryAccess
 import net.minecraft.command.EntitySelector
 import net.minecraft.command.argument.*
 import net.minecraft.entity.decoration.InteractionEntity
-import net.minecraft.item.ItemStack
 import net.minecraft.server.command.CommandManager
 import net.minecraft.server.command.ServerCommandSource
 import net.minecraft.text.Text
-import kotlin.time.Duration.Companion.microseconds
+import kotlin.time.Duration.Companion.milliseconds
 
 object QuestCommand {
     const val QUESTBUILDER_ID = "QuestBuilder_ID"
@@ -156,19 +155,24 @@ object QuestCommand {
                     val duration = context.getArgument("Duration",Int::class.java)
                     val (id,questBuildHolder) = getPendingQuest(context) ?: return@executes -1
                     questBuildHolder.behavior.add(Behavior.Delay(duration.tick))
-                    context.source.sendFeedback({ Text.literal("§a퀘스트#$id 의 행동 리스트를 수정했습니다")},true)
+                    context.source.sendFeedback({ Text.literal("§a퀘스트#$id 에 행동을 추가했습니다.")},true)
                     1
                 })
             ).then(
                 CommandManager.literal("GiveItem").then(
                     CommandManager.argument("Item", ItemStackArgumentType.itemStack(registryAccess)).then(
                         CommandManager.argument("Amount", IntegerArgumentType.integer(1,64)).executes { context ->
-                        val (id,questBuildHolder) = getPendingQuest(context) ?: return@executes -1
-                        val item = context.getArgument("Item", ItemStackArgument::class.java).createStack(context.getArgument("Amount",Int::class.java),false)
-                        questBuildHolder.behavior.add(Behavior.GiveItem(item))
-                        context.source.sendFeedback({ Text.literal("§a퀘스트#$id 의 행동 리스트를 수정했습니다")},true)
-                        1
-                    })
+                            val (id,questBuildHolder) = getPendingQuest(context) ?: return@executes -1
+                            val item = context.getArgument("Item", ItemStackArgument::class.java).createStack(context.getArgument("Amount",Int::class.java),false)
+                            if(item.isEmpty){
+                                context.source.sendFeedback({ Text.literal("AIR는 불가능합니다") },false)
+                                return@executes -1
+                            }
+                            questBuildHolder.behavior.add(Behavior.GiveItem(item))
+                            context.source.sendFeedback({ Text.literal("§a퀘스트#$id 에 행동을 추가했습니다.")},true)
+                            1
+                        }
+                    )
                 )
             ).then(
                 CommandManager.literal("Command").then(
@@ -176,7 +180,7 @@ object QuestCommand {
                         val (id,questBuildHolder) = getPendingQuest(context) ?: return@executes -1
                         val command = context.getArgument("CommandLine",String::class.java)
                         questBuildHolder.behavior.add(Behavior.Command(command))
-                        context.source.sendFeedback({ Text.literal("§a퀘스트#$id 의 행동 리스트를 수정했습니다")},true)
+                        context.source.sendFeedback({ Text.literal("§a퀘스트#$id 에 행동을 추가했습니다.")},true)
                         1
                     }
                 )
@@ -186,7 +190,7 @@ object QuestCommand {
                         val (id,questBuildHolder) = getPendingQuest(context) ?: return@executes -1
                         val text = context.getArgument("Text", Text::class.java)
                         questBuildHolder.behavior.add(Behavior.Dialogue(null,text))
-                        context.source.sendFeedback({ Text.literal("§a퀘스트#$id 의 행동 리스트를 수정했습니다")},true)
+                        context.source.sendFeedback({ Text.literal("§a퀘스트#$id 에 행동을 추가했습니다.")},true)
                         1
                     }.then(
                         CommandManager.literal("--byNpc").then(
@@ -199,7 +203,7 @@ object QuestCommand {
                                     return@executes -1
                                 }
                                 questBuildHolder.behavior.add(Behavior.Dialogue(npc.npc,text))
-                                context.source.sendFeedback({ Text.literal("§a퀘스트#$id 의 행동 리스트를 수정했습니다.")},true)
+                                context.source.sendFeedback({ Text.literal("§a퀘스트#$id 에 행동을 추가했습니다.")},true)
                                 1
                             }
                         )
@@ -215,7 +219,7 @@ object QuestCommand {
                     return@executes -1
                 }
                 val b = questBuildHolder.behavior.removeAt(index)
-                context.source.sendFeedback({ Text.literal("퀘스트#$id 의 #$b 행동을 삭제했습니다.")},true)
+                context.source.sendFeedback({ Text.literal("퀘스트#$id 의 행동 # ").append(b.toText()).append(" 를 삭제했습니다.") },true)
                 1
             })
         ).then(
@@ -223,7 +227,7 @@ object QuestCommand {
                 val (id,questBuildHolder) = getPendingQuest(context) ?: return@executes -1
                 context.source.sendFeedback({ Text.literal("퀘스트#$id 의 행동 리스트를 확인합니다.")},true)
                 questBuildHolder.behavior.forEachIndexed { i,e ->
-                    context.source.sendFeedback({ Text.literal("#$i - ${e.javaClass.simpleName}") },false)
+                    context.source.sendFeedback({ Text.literal("#$i - ").append(e.toText()) },false)
                 }
                 return@executes 1
             }
@@ -239,7 +243,7 @@ object QuestCommand {
                             val radius = context.getArgument("radius",Double::class.java)
                             val (id,questBuildHolder) = getPendingQuest(context) ?: return@executes -1
                             questBuildHolder.startCondition.add(QuestCondition.Arrive(pos,radius))
-                            context.source.sendFeedback({ Text.literal("퀘스트#$id 의 조건 리스트를 수정했습니다")},true)
+                            context.source.sendFeedback({ Text.literal("퀘스트#$id 에 조건을 추가했습니다.")},true)
                             1
                         }
                     )
@@ -254,7 +258,7 @@ object QuestCommand {
                             return@executes -1
                         }
                         questBuildHolder.startCondition.add(QuestCondition.InteractWith(entity.uuid))
-                        context.source.sendFeedback({ Text.literal("퀘스트#$id 의 조건 리스트를 수정했습니다")},true)
+                        context.source.sendFeedback({ Text.literal("퀘스트#$id 에 조건을 추가했습니다.")},true)
                         1
                     }
                 )
@@ -264,7 +268,7 @@ object QuestCommand {
                         val (id, questBuildHolder) = getPendingQuest(context) ?: return@executes -1
                         val questid = context.getArgument("previous-Quest_ID", String::class.java)
                         questBuildHolder.startCondition.add(QuestCondition.Quest(questid))
-                        context.source.sendFeedback({ Text.literal("퀘스트#$id 의 조건 리스트를 수정했습니다") }, true)
+                        context.source.sendFeedback({ Text.literal("퀘스트#$id 에 조건을 추가했습니다.")},true)
                         1
                     }
                 )
@@ -273,10 +277,14 @@ object QuestCommand {
                     CommandManager.argument("Item", ItemStackArgumentType.itemStack(registryAccess)).then(
                         CommandManager.argument("requiredAmount", IntegerArgumentType.integer(1)).executes { context ->
                             val item = context.getArgument("Item", ItemStackArgument::class.java).createStack(1,false)
+                            if(item.isEmpty){
+                                context.source.sendFeedback({ Text.literal("AIR는 불가능합니다") },false)
+                                return@executes -1
+                            }
                             val amount = context.getArgument("requiredAmount",Int::class.java)
                             val (id,questBuildHolder) = getPendingQuest(context) ?: return@executes -1
                             questBuildHolder.startCondition.add(QuestCondition.ObtainItem(item,amount))
-                            context.source.sendFeedback({ Text.literal("퀘스트#$id 의 조건 리스트를 수정했습니다")},true)
+                            context.source.sendFeedback({ Text.literal("퀘스트#$id 에 조건을 추가했습니다.")},true)
                             1
                         }
                     )
@@ -291,7 +299,7 @@ object QuestCommand {
                     return@executes -1
                 }
                 val b = questBuildHolder.startCondition.removeAt(index)
-                context.source.sendFeedback({ Text.literal("퀘스트#$id 의 #$b 조건을 삭제했습니다.")},true)
+                context.source.sendFeedback({ Text.literal("퀘스트#$id 의 조건 #").append(b.toText()).append(" 를 삭제했습니다.") },true)
                 1
             })
         ).then(
@@ -299,7 +307,7 @@ object QuestCommand {
                 val (id,questBuildHolder) = getPendingQuest(context) ?: return@executes -1
                 context.source.sendFeedback({ Text.literal("퀘스트#$id 의 조건 리스트를 확인합니다.")},true)
                 questBuildHolder.startCondition.forEachIndexed { i,e ->
-                    context.source.sendFeedback({ Text.literal("#$i - ${e.javaClass.simpleName}") },false)
+                    context.source.sendFeedback({ Text.literal("#$i - ").append(e.toText()) },false)
                 }
                 return@executes 1
             }
@@ -330,5 +338,5 @@ data class QuestBuildHolder(val startCondition: MutableList<QuestCondition>, val
 }
 
 val Int.tick
-    get() = this.microseconds*50
-fun kotlin.time.Duration.toTicks() = inWholeMicroseconds/50
+    get() = this.milliseconds*50
+fun kotlin.time.Duration.toTicks() = inWholeMilliseconds/50

@@ -3,26 +3,28 @@ package io.github.yoonseo6399.rpgquest.quest
 import com.mojang.serialization.Codec
 import com.mojang.serialization.MapCodec
 import com.mojang.serialization.codecs.RecordCodecBuilder
+import io.github.yoonseo6399.rpgquest.TextLike
+import io.github.yoonseo6399.rpgquest.prettyText
 import kotlinx.coroutines.suspendCancellableCoroutine
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents
 import net.fabricmc.fabric.api.event.player.UseEntityCallback
-import net.minecraft.command.EntitySelector
 import net.minecraft.entity.Entity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.item.ItemStack
-import net.minecraft.scoreboard.ScoreboardObjective
+import net.minecraft.text.ClickEvent
+import net.minecraft.text.HoverEvent
+import net.minecraft.text.Text
 import net.minecraft.util.ActionResult
 import net.minecraft.util.StringIdentifiable
 import net.minecraft.util.Uuids
 import net.minecraft.util.math.Vec3d
-import net.minecraft.world.World
 import java.util.*
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.resume
 
 sealed class QuestCondition(
     val autoTerminate: Boolean = true
-) {
+) : TextLike {
     var activeQuest: ActiveQuest? = null
     var continuation : Continuation<Unit>? = null
     companion object {
@@ -99,6 +101,10 @@ sealed class QuestCondition(
         override fun check(quest: ActiveQuest): Boolean {
             return false
         }
+
+        override fun toText(): Text {
+            return Text.literal("InteractWith : ").append(Text.of(uuid))
+        }
     }
     abstract class RepeatedCheck( val predicate : ActiveQuest.() -> Boolean = { true }) : QuestCondition() {
 
@@ -117,6 +123,13 @@ sealed class QuestCondition(
                 ).apply(instance, ::Arrive)
             }
         }
+
+        override fun toText(): Text {
+            return Text.literal("Arrive : ").append(Text.literal(pos.toString()).styled {
+                it.withClickEvent(ClickEvent.RunCommand("tp ${pos.x} ${pos.y} ${pos.z}"))
+                it.withHoverEvent(HoverEvent.ShowText(Text.literal("텔레포트 하려면 클릭")))
+            })
+        }
     }
     class ObtainItem(val itemStack: ItemStack,val requiredAmount : Int) : RepeatedCheck( { player.inventory.hasEnough(itemStack,requiredAmount)} ){
         override val type: Type
@@ -129,6 +142,7 @@ sealed class QuestCondition(
                 ).apply(instance, ::ObtainItem)
             }
         }
+        override fun toText(): Text = Text.literal("ObtainItem : ").append(itemStack.prettyText()).append(Text.literal(" requiredAmount : ${itemStack.count}"))
     }
     class Quest(val id : String) : RepeatedCheck( { player.hasDoneWith(id) } ) {
         override val type: Type
@@ -139,6 +153,10 @@ sealed class QuestCondition(
                     Codec.STRING.fieldOf("id").forGetter { it.id }
                 ).apply(instance, ::Quest)
             }
+        }
+
+        override fun toText(): Text {
+            return Text.literal("QuestRequirement : $id")
         }
     }
 
@@ -153,7 +171,8 @@ sealed class QuestCondition(
         }
     }
 }
-fun PlayerInventory.hasEnough(item : ItemStack,amount : Int) : Boolean{
+fun PlayerInventory.hasEnough(itemStack : ItemStack,amount : Int) : Boolean{
+    val item = itemStack.copy()
     var tot = 0
     forEach {
         if(ItemStack.areItemsAndComponentsEqual(it,item)) tot += it.count
